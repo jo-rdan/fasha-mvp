@@ -8,11 +8,28 @@
     "eject": "expo eject"
   },
   "dependencies": {
+    "@apollo/client": "^3.3.11",
+    "@apollo/react-hooks": "^4.0.0",
+    "@eva-design/eva": "^2.0.0",
+    "@expo-google-fonts/inter": "^0.1.0",
+    "@react-native-community/async-storage": "^1.12.1",
+    "@ui-kitten/components": "^5.0.0",
+    "apollo-cache-inmemory": "^1.6.6",
+    "apollo-client": "^2.6.10",
+    "apollo-link-http": "^1.5.17",
     "expo": "~40.0.0",
+    "expo-font": "~8.4.0",
     "expo-status-bar": "~1.0.3",
+    "graphql": "^15.5.0",
+    "graphql-tag": "^2.11.0",
     "react": "16.13.1",
+    "react-apollo": "^3.1.5",
     "react-dom": "16.13.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-40.0.1.tar.gz",
+    "react-native-design-system": "^1.2.3",
+    "react-native-dotenv": "^2.5.3",
+    "react-native-keyboard-aware-scroll-view": "^0.9.3",
+    "react-native-svg": "12.1.0",
     "react-native-web": "^0.15.0"
   },
   "devDependencies": {
