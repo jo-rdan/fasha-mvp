@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  ScrollView,
   View,
   Text,
   Image,
@@ -11,20 +10,18 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
-import { Button, Text as Texts, Spinner } from "@ui-kitten/components";
 import axios from "axios";
-import { API_URL } from "dotenv";
+import { Button, Text as Texts, Spinner } from "@ui-kitten/components";
 import { validateEmail } from "../helpers/emailValidation";
+import { API_URL } from "dotenv";
 import { useNavigation } from "@react-navigation/native";
 
-function Signup(props) {
+function Signin(props) {
   const [userData, setUserData] = useState({
     userEmail: "",
     userPassword: "",
   });
   const [loading, setLoading] = useState(false);
-  const [isMatch, setIsMatch] = useState(false);
-
   const navigation = useNavigation();
 
   const handleSubmit = async () => {
@@ -39,33 +36,37 @@ function Signup(props) {
           [{ text: "OK", onPress: () => console.log("Thank you!") }]
         );
 
-      if (!isMatch)
+      if (!userPassword)
         return Alert.alert(
-          "Password mismatch!",
-          "Make sure both passwords match",
+          "Missing password",
+          "Please make sure you input your password",
           [{ text: "OK", onPress: () => console.log("Thank you!") }]
         );
       setLoading(true);
       Keyboard.dismiss();
-      const response = await axios.post(`${API_URL}/users/signup`, {
+      const response = await axios.post(`${API_URL}/users/signin`, {
         email: userEmail,
         password: userPassword,
       });
-      if (response.status === 201) {
-        setLoading(false);
-        return navigation.navigate("Signin");
-      }
+      if (response.status === 200) return navigation.navigate("App");
     } catch (error) {
       setLoading(false);
-      return Alert.alert("User already exists", error.response.data.error, [
-        {
-          text: "Yes, sign me in",
-          onPress: () => navigation.navigate("Signin"),
-        },
-      ]);
+      if (error.response.status === 404)
+        return Alert.alert("User not found", error.response.data.error, [
+          {
+            text: "sign me up",
+            onPress: () => navigation.navigate("Signup"),
+          },
+        ]);
+      if (error.response.status === 401)
+        return Alert.alert("Incorrect credentials", error.response.data.error, [
+          {
+            text: "Try again",
+            onPress: () => setUserData({ ...userData, userPassword: "" }),
+          },
+        ]);
     }
   };
-
   return (
     <View style={styles.container}>
       <View style={styles.logoBox}>
@@ -76,8 +77,8 @@ function Signup(props) {
         />
       </View>
       <View style={styles.welcome}>
-        <Text style={styles.welcomeText}>Welcome,</Text>
-        <Text>Create an account to get started!</Text>
+        <Text style={styles.welcomeText}>Welcome back,</Text>
+        <Text>Log into your account to continue</Text>
       </View>
       <View style={styles.form}>
         <View style={styles.innerForm}>
@@ -103,36 +104,20 @@ function Signup(props) {
               setUserData({ ...userData, userPassword })
             }
           />
-          <TextInput
-            underlineColorAndroid='rgba(0,0,0,0)'
-            placeholder='Confirm password'
-            style={styles.input}
-            secureTextEntry={true}
-            autoCapitalize='none'
-            onChangeText={(confirmPass) =>
-              userData.userPassword === confirmPass
-                ? setIsMatch(true)
-                : setIsMatch(false)
-            }
-          />
         </View>
       </View>
       <View style={styles.btnParent}>
         <Button style={styles.btn} onPress={handleSubmit}>
-          {!loading ? (
-            "Create account"
-          ) : (
-            <Spinner status='basic' size='small' />
-          )}
+          {!loading ? "Log in" : <Spinner status='basic' size='small' />}
         </Button>
         <Text>
-          Already have an account?{" "}
+          Don't have an account?{" "}
           <Texts
             status='primary'
             style={styles.span}
-            onPress={() => navigation.navigate("Signin")}
+            onPress={() => navigation.navigate("Signup")}
           >
-            Sign in
+            Sign up
           </Texts>
         </Text>
       </View>
@@ -184,4 +169,4 @@ const styles = StyleSheet.create({
   welcomeText: { fontSize: 24, fontWeight: "bold" },
 });
 
-export default Signup;
+export default Signin;
