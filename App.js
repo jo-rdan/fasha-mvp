@@ -9,12 +9,19 @@ import {
   StatusBar,
   Image,
 } from "react-native";
-import { mapping, dark as theme } from "@eva-design/eva";
-import { ApplicationProvider, Button } from "@ui-kitten/components";
+import { mapping, light as theme } from "@eva-design/eva";
+import {
+  ApplicationProvider,
+  IconRegistry,
+  Button,
+  Icon,
+} from "@ui-kitten/components";
 import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import Signup from "./src/screens/Signup.js";
 import Signin from "./src/screens/Signin.js";
+import Profile from "./src/screens/Profile";
 import { createStackNavigator } from "@react-navigation/stack";
+import { EvaIconsPack } from "@ui-kitten/eva-icons";
 
 const Stack = createStackNavigator();
 
@@ -33,27 +40,35 @@ export function App() {
 
 export default () => {
   return (
-    <ApplicationProvider mapping={mapping} theme={theme}>
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen
-            name='App'
-            component={App}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name='Signup'
-            component={Signup}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name='Signin'
-            component={Signin}
-            options={{ headerShown: false }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </ApplicationProvider>
+    <>
+      <IconRegistry icons={EvaIconsPack} />
+      <ApplicationProvider mapping={mapping} theme={theme}>
+        <NavigationContainer>
+          <Stack.Navigator>
+            <Stack.Screen
+              name='App'
+              component={App}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name='Signup'
+              component={Signup}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name='Signin'
+              component={Signin}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name='Profile'
+              component={Profile}
+              options={{ headerShown: false }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </ApplicationProvider>
+    </>
   );
 };
 
@@ -64,5 +79,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
+  icon: {
+    width: 20,
+    height: 20,
   },
 });
