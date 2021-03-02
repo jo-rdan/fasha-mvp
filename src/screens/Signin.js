@@ -15,6 +15,7 @@ import { Button, Text as Texts, Spinner } from "@ui-kitten/components";
 import { validateEmail } from "../helpers/emailValidation";
 import { API_URL } from "dotenv";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function Signin(props) {
   const [userData, setUserData] = useState({
@@ -48,7 +49,11 @@ function Signin(props) {
         email: userEmail,
         password: userPassword,
       });
-      if (response.status === 200) return navigation.navigate("App");
+      if (response.status === 200) {
+        setLoading(false);
+        await AsyncStorage.setItem("token", response.data.data);
+        return navigation.navigate("Profile");
+      }
     } catch (error) {
       setLoading(false);
       if (error.response.status === 404)
