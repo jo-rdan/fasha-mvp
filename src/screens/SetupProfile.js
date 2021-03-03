@@ -16,55 +16,12 @@ import { API_URL } from "dotenv";
 import { validateEmail } from "../helpers/emailValidation";
 import { useNavigation, useRoute } from "@react-navigation/native";
 
-export default SetupProfile = (props) => {
+export default SetupProfile = ({ onSetup, loading }) => {
   const [userProfile, setUserProfile] = useState({
     fullNames: "",
     username: "",
   });
-  const [loading, setLoading] = useState(false);
-
-  const navigation = useNavigation();
   const route = useRoute();
-
-  const handleSubmit = async () => {
-    try {
-      const { fullNames, username } = userProfile;
-      if (!fullNames || !username)
-        return Alert.alert(
-          "Empty fields",
-          "Please make sure you fill all fields",
-          [{ text: "OK", onPress: () => console.log("Thank you!") }]
-        );
-
-      setLoading(true);
-      Keyboard.dismiss();
-      const response = await axios.patch(
-        `${API_URL}/users/setup-profile?email=${route.params.email}`,
-        {
-          fullNames,
-          username,
-        }
-      );
-      if (response.status === 200) {
-        setLoading(false);
-        return navigation.navigate("Profile", { fullNames, username });
-      }
-    } catch (error) {
-      setLoading(false);
-      if (error.response && error.response.status === 404)
-        return Alert.alert(
-          "User not found",
-          `User with email ${route.params.email} does not exist`,
-          [
-            {
-              text: "Sign up",
-              onPress: () => navigation.navigate("Signup"),
-            },
-          ]
-        );
-      return error;
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -102,7 +59,7 @@ export default SetupProfile = (props) => {
         </View>
       </View>
       <View style={styles.btnParent}>
-        <Button style={styles.btn} onPress={handleSubmit}>
+        <Button style={styles.btn} onPress={() => onSetup(userProfile, route)}>
           {!loading ? "Finish setup" : <Spinner status='basic' size='small' />}
         </Button>
       </View>

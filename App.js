@@ -8,6 +8,8 @@ import {
   Platform,
   StatusBar,
   Image,
+  Keyboard,
+  Alert,
 } from "react-native";
 import { mapping, light as theme } from "@eva-design/eva";
 import {
@@ -15,6 +17,8 @@ import {
   IconRegistry,
   Button,
   Icon,
+  Spinner,
+  Toggle,
 } from "@ui-kitten/components";
 import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import Signup from "./src/screens/Signup.js";
@@ -23,54 +27,299 @@ import Profile from "./src/screens/Profile";
 import { createStackNavigator } from "@react-navigation/stack";
 import { EvaIconsPack } from "@ui-kitten/eva-icons";
 import SetupProfile from "./src/screens/SetupProfile.js";
+import axios from "axios";
+import { API_URL } from "dotenv";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { validateEmail } from "./src/helpers/emailValidation";
+import { isLoading } from "expo-font";
 
 const Stack = createStackNavigator();
 
-export function App() {
+export function App({ loading }) {
   const navigation = useNavigation();
+
   return (
     <View style={styles.container}>
       <Image source={require("./src/assets/app/logo.png")} />
       {/* <Text onPress={() => navigation.navigate("Signup")}>Sign up</Text> */}
-      <Button appearance='ghost' onPress={() => navigation.navigate("Signup")}>
-        Sign up
-      </Button>
+      {console.log(loading)}
+      {loading ? (
+        <View>
+          <Spinner size='medium' />
+        </View>
+      ) : (
+        <View>
+          <Button
+            appearance='ghost'
+            onPress={() => navigation.navigate("Signin")}
+          >
+            Continue
+          </Button>
+        </View>
+      )}
     </View>
   );
 }
 
 export default () => {
+  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAuth, setIsAuth] = useState(false);
+
+  let token;
+  useEffect(() => {
+    const fetchToken = async () => {
+      setIsLoading(true);
+      token = await AsyncStorage.getItem("token");
+      // setIsLoading(true);
+      if (!token) {
+        setIsLoading(false);
+        return <App loading={isLoading} />;
+      }
+      setIsLoading(false);
+      console.log("isLoading", isLoading);
+      return setIsAuth(true);
+    };
+    fetchToken();
+  }, [isAuth]);
+
+  const handleLogout = async (setVisible) => {
+    setVisible(false);
+    setLoading(true);
+    await AsyncStorage.removeItem("token");
+    setLoading(false);
+    setIsAuth(false);
+    return;
+  };
+
+  const handleDeleteUser = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        return Alert.alert(
+          "Sign in",
+          "You need to sign in to perform this action"
+          // [{ text: `Sign in`, onPress: () => navigation.navigate("Signin") }]
+        );
+      }
+      setLoading(true);
+      const response = await axios.delete(`${API_URL}/users/user/delete`, {
+        headers: { token },
+      });
+      if (response.status === 200) {
+        setLoading(false);
+        await AsyncStorage.removeItem("token");
+        return setIsAuth(false);
+        // return navigation.navigate("Signup");
+      }
+    } catch (error) {
+      if (error.response && error.response.status === 401)
+        return Alert.alert(
+          "Authentication failed!",
+          "You need to sign in to perform this action",
+          [{ text: `Sign in`, onPress: () => setIsAuth(false) }]
+        );
+      if (error.response && error.response.status === 404)
+        return Alert.alert("User not found!", error.response.data.error, [
+          { text: `Ok`, onPress: () => setIsAuth(false) },
+        ]);
+    }
+  };
+
+  const handleSignup = async (userData, isMatch, navigation) => {
+    try {
+      const { userEmail, userPassword } = userData;
+      const isValid = validateEmail(userEmail);
+
+      if (!isValid)
+        return Alert.alert(
+          "Invalid email",
+          "Please make sure your email is valid",
+          [{ text: "OK", onPress: () => console.log("Thank you!") }]
+        );
+
+      if (!isMatch)
+        return Alert.alert(
+          "Password mismatch!",
+          "Make sure both passwords match",
+          [{ text: "OK", onPress: () => console.log("Thank you!") }]
+        );
+      setLoading(true);
+      Keyboard.dismiss();
+      const response = await axios.post(`${API_URL}/users/signup`, {
+        email: userEmail,
+        password: userPassword,
+      });
+
+      if (response.status === 201) {
+        setLoading(false);
+        return navigation.navigate("SetupProfile", {
+          email: userEmail,
+          token: response.data.token,
+        });
+      }
+    } catch (error) {
+      setLoading(false);
+      if (error.response && error.response.status === 409)
+        return Alert.alert("User already exists", error.response.data.error, [
+          {
+            text: "Yes, sign me in",
+            onPress: () => console.log("thanks"),
+          },
+        ]);
+      return error;
+    }
+  };
+
+  const handleSetupProfile = async (userProfile, route) => {
+    try {
+      const { fullNames, username } = userProfile;
+      if (!fullNames || !username)
+        return Alert.alert(
+          "Empty fields",
+          "Please make sure you fill all fields",
+          [{ text: "OK", onPress: () => console.log("Thank you!") }]
+        );
+
+      setLoading(true);
+      Keyboard.dismiss();
+      const response = await axios.patch(
+        `${API_URL}/users/setup-profile?email=${route.params.email}`,
+        {
+          fullNames,
+          username,
+        }
+      );
+      if (response.status === 200) {
+        setLoading(false);
+        await AsyncStorage.setItem("token", route.params.token);
+        return setIsAuth(true);
+      }
+    } catch (error) {
+      setLoading(false);
+      if (error.response && error.response.status === 404)
+        return Alert.alert(
+          "User not found",
+          `User with email ${route.params.email} does not exist`,
+          [
+            {
+              text: "Sign up",
+              onPress: () => navigation.navigate("Signup"),
+            },
+          ]
+        );
+      return error;
+    }
+  };
+
+  const handleSignin = async (userData) => {
+    try {
+      const { userEmail, userPassword } = userData;
+      const isValid = validateEmail(userEmail);
+
+      if (!isValid)
+        return Alert.alert(
+          "Invalid email",
+          "Please make sure your email is valid",
+          [{ text: "OK", onPress: () => console.log("Thank you!") }]
+        );
+
+      if (!userPassword)
+        return Alert.alert(
+          "Missing password",
+          "Please make sure you input your password",
+          [{ text: "OK", onPress: () => console.log("Thank you!") }]
+        );
+      setLoading(true);
+      Keyboard.dismiss();
+      const response = await axios.post(`${API_URL}/users/signin`, {
+        email: userEmail,
+        password: userPassword,
+      });
+      if (response.status === 200) {
+        await AsyncStorage.setItem("token", response.data.data);
+        setIsAuth(true);
+        return setLoading(false);
+        // return navigation.navigate("Profile");
+      }
+    } catch (error) {
+      console.log("====================================");
+      console.log(error, "<--------");
+      console.log("====================================");
+      setLoading(false);
+      if (error.response && error.response.status === 404)
+        return Alert.alert("User not found", error.response.data.error, [
+          {
+            text: "sign me up",
+            onPress: () => console.log("thanks"),
+          },
+        ]);
+      if (error.response && error.response.status === 401) {
+        setUserData({ ...userData, userPassword: "" });
+        return Alert.alert("Incorrect credentials", error.response.data.error, [
+          {
+            text: "Try again",
+            onPress: () => console.log("here"),
+          },
+        ]);
+      }
+    }
+  };
   return (
     <>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider mapping={mapping} theme={theme}>
         <NavigationContainer>
           <Stack.Navigator>
-            <Stack.Screen
-              name='App'
-              component={App}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name='Signup'
-              component={Signup}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name='SetupProfile'
-              component={SetupProfile}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name='Signin'
-              component={Signin}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name='Profile'
-              component={Profile}
-              options={{ headerShown: false }}
-            />
+            {isAuth ? (
+              <Stack.Screen name='Profile' options={{ headerShown: false }}>
+                {(props) => (
+                  <Profile
+                    {...props}
+                    onLogout={handleLogout}
+                    onDelete={handleDeleteUser}
+                    loading={loading}
+                    setLoading={setLoading}
+                  />
+                )}
+              </Stack.Screen>
+            ) : (
+              <>
+                <Stack.Screen name='App' options={{ headerShown: false }}>
+                  {(props) => <App {...props} loading={isLoading} />}
+                </Stack.Screen>
+                <Stack.Screen name='Signin' options={{ headerShown: false }}>
+                  {(props) => (
+                    <Signin
+                      {...props}
+                      onSignin={handleSignin}
+                      loading={loading}
+                    />
+                  )}
+                </Stack.Screen>
+                <Stack.Screen name='Signup' options={{ headerShown: false }}>
+                  {(props) => (
+                    <Signup
+                      {...props}
+                      onSignup={handleSignup}
+                      loading={loading}
+                    />
+                  )}
+                </Stack.Screen>
+                <Stack.Screen
+                  name='SetupProfile'
+                  options={{ headerShown: false }}
+                >
+                  {(props) => (
+                    <SetupProfile
+                      {...props}
+                      onSetup={handleSetupProfile}
+                      loading={loading}
+                    />
+                  )}
+                </Stack.Screen>
+              </>
+            )}
           </Stack.Navigator>
         </NavigationContainer>
       </ApplicationProvider>
