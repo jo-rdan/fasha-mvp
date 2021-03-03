@@ -22,6 +22,7 @@ import Signin from "./src/screens/Signin.js";
 import Profile from "./src/screens/Profile";
 import { createStackNavigator } from "@react-navigation/stack";
 import { EvaIconsPack } from "@ui-kitten/eva-icons";
+import SetupProfile from "./src/screens/SetupProfile.js";
 
 const Stack = createStackNavigator();
 
@@ -53,6 +54,11 @@ export default () => {
             <Stack.Screen
               name='Signup'
               component={Signup}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name='SetupProfile'
+              component={SetupProfile}
               options={{ headerShown: false }}
             />
             <Stack.Screen

@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   ScrollView,
   View,
-  Text,
   Image,
   StyleSheet,
   TextInput,
@@ -11,13 +10,14 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
-import { Button, Text as Texts, Spinner } from "@ui-kitten/components";
+import { Button, Text, Spinner } from "@ui-kitten/components";
 import axios from "axios";
 import { API_URL } from "dotenv";
 import { validateEmail } from "../helpers/emailValidation";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-function Signup(props) {
+export default Signup = (props) => {
   const [userData, setUserData] = useState({
     userEmail: "",
     userPassword: "",
@@ -53,16 +53,21 @@ function Signup(props) {
       });
       if (response.status === 201) {
         setLoading(false);
-        return navigation.navigate("Signin");
+        await AsyncStorage.setItem("token", response.data.data);
+        return navigation.navigate("SetupProfile", {
+          email: userData.userEmail,
+        });
       }
     } catch (error) {
       setLoading(false);
-      return Alert.alert("User already exists", error.response.data.error, [
-        {
-          text: "Yes, sign me in",
-          onPress: () => navigation.navigate("Signin"),
-        },
-      ]);
+      if (error.response && error.response.status === 409)
+        return Alert.alert("User already exists", error.response.data.error, [
+          {
+            text: "Yes, sign me in",
+            onPress: () => navigation.navigate("Signin"),
+          },
+        ]);
+      return null;
     }
   };
 
@@ -83,7 +88,7 @@ function Signup(props) {
         <View style={styles.innerForm}>
           <TextInput
             underlineColorAndroid='rgba(0,0,0,0)'
-            placeholder='Email or Phone'
+            placeholder='Email'
             style={styles.input}
             autoCompleteType='email'
             autoCapitalize='none'
@@ -119,31 +124,27 @@ function Signup(props) {
       </View>
       <View style={styles.btnParent}>
         <Button style={styles.btn} onPress={handleSubmit}>
-          {!loading ? (
-            "Create account"
-          ) : (
-            <Spinner status='basic' size='small' />
-          )}
+          {!loading ? "Next" : <Spinner status='basic' size='small' />}
         </Button>
         <Text>
           Already have an account?{" "}
-          <Texts
+          <Text
             status='primary'
             style={styles.span}
             onPress={() => navigation.navigate("Signin")}
           >
             Sign in
-          </Texts>
+          </Text>
         </Text>
       </View>
       <View>
-        <Texts appearance='hint' style={styles.footer}>
-          All rights reserved &copy; 2021, Fasha
-        </Texts>
+        <Text appearance='hint' style={styles.footer}>
+          All rights reserved &copy; 2021 Fasha
+        </Text>
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   btn: { width: "100%", borderRadius: 30 },
@@ -183,5 +184,3 @@ const styles = StyleSheet.create({
   welcome: { alignItems: "center" },
   welcomeText: { fontSize: 24, fontWeight: "bold" },
 });
-
-export default Signup;
