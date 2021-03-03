@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  ScrollView,
   View,
   Image,
   StyleSheet,
@@ -9,70 +10,62 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
-import axios from "axios";
 import { Button, Text, Spinner } from "@ui-kitten/components";
-import { validateEmail } from "../helpers/emailValidation";
+import axios from "axios";
 import { API_URL } from "dotenv";
-import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { validateEmail } from "../helpers/emailValidation";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
-function Signin(props) {
-  const [userData, setUserData] = useState({
-    userEmail: "",
-    userPassword: "",
+export default SetupProfile = (props) => {
+  const [userProfile, setUserProfile] = useState({
+    fullNames: "",
+    username: "",
   });
   const [loading, setLoading] = useState(false);
+
   const navigation = useNavigation();
+  const route = useRoute();
 
   const handleSubmit = async () => {
     try {
-      const { userEmail, userPassword } = userData;
-      const isValid = validateEmail(userEmail);
-
-      if (!isValid)
+      const { fullNames, username } = userProfile;
+      if (!fullNames || !username)
         return Alert.alert(
-          "Invalid email",
-          "Please make sure your email is valid",
+          "Empty fields",
+          "Please make sure you fill all fields",
           [{ text: "OK", onPress: () => console.log("Thank you!") }]
         );
 
-      if (!userPassword)
-        return Alert.alert(
-          "Missing password",
-          "Please make sure you input your password",
-          [{ text: "OK", onPress: () => console.log("Thank you!") }]
-        );
       setLoading(true);
       Keyboard.dismiss();
-      const response = await axios.post(`${API_URL}/users/signin`, {
-        email: userEmail,
-        password: userPassword,
-      });
+      const response = await axios.patch(
+        `${API_URL}/users/setup-profile?email=${route.params.email}`,
+        {
+          fullNames,
+          username,
+        }
+      );
       if (response.status === 200) {
         setLoading(false);
-        await AsyncStorage.setItem("token", response.data.data);
-        return navigation.navigate("Profile");
+        return navigation.navigate("Profile", { fullNames, username });
       }
     } catch (error) {
       setLoading(false);
       if (error.response && error.response.status === 404)
-        return Alert.alert("User not found", error.response.data.error, [
-          {
-            text: "sign me up",
-            onPress: () => navigation.navigate("Signup"),
-          },
-        ]);
-      if (error.response && error.response.status === 401) {
-        setUserData({ ...userData, userPassword: "" });
-        return Alert.alert("Incorrect credentials", error.response.data.error, [
-          {
-            text: "Try again",
-            onPress: () => setUserData({ ...userData, userPassword: "" }),
-          },
-        ]);
-      }
+        return Alert.alert(
+          "User not found",
+          `User with email ${route.params.email} does not exist`,
+          [
+            {
+              text: "Sign up",
+              onPress: () => navigation.navigate("Signup"),
+            },
+          ]
+        );
+      return error;
     }
   };
+
   return (
     <View style={styles.container}>
       <View style={styles.logoBox}>
@@ -83,49 +76,35 @@ function Signin(props) {
         />
       </View>
       <View style={styles.welcome}>
-        <Text style={styles.welcomeText}>Welcome back,</Text>
-        <Text>Log into your account to continue</Text>
+        <Text style={styles.welcomeText}>Almost there,</Text>
+        <Text>Setup a basic profile, you can edit later</Text>
       </View>
       <View style={styles.form}>
         <View style={styles.innerForm}>
           <TextInput
             underlineColorAndroid='rgba(0,0,0,0)'
-            placeholder='Email or Phone'
+            placeholder='Full Names'
             style={styles.input}
-            autoCompleteType='email'
-            autoCapitalize='none'
-            value={userData.userEmail}
-            onChangeText={(userEmail) =>
-              setUserData({ ...userData, userEmail })
+            value={userProfile.fullNames}
+            onChangeText={(fullNames) =>
+              setUserProfile({ ...userProfile, fullNames })
             }
           />
           <TextInput
             underlineColorAndroid='rgba(0,0,0,0)'
-            placeholder='Password'
+            placeholder='Choose your username'
             style={styles.input}
-            secureTextEntry={true}
-            autoCapitalize='none'
-            value={userData.userPassword}
-            onChangeText={(userPassword) =>
-              setUserData({ ...userData, userPassword })
+            value={userProfile.username}
+            onChangeText={(username) =>
+              setUserProfile({ ...userProfile, username })
             }
           />
         </View>
       </View>
       <View style={styles.btnParent}>
         <Button style={styles.btn} onPress={handleSubmit}>
-          {!loading ? "Log in" : <Spinner status='basic' size='small' />}
+          {!loading ? "Finish setup" : <Spinner status='basic' size='small' />}
         </Button>
-        <Text>
-          Don't have an account?{" "}
-          <Text
-            status='primary'
-            style={styles.span}
-            onPress={() => navigation.navigate("Signup")}
-          >
-            Sign up
-          </Text>
-        </Text>
       </View>
       <View>
         <Text appearance='hint' style={styles.footer}>
@@ -134,7 +113,7 @@ function Signin(props) {
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   btn: { width: "100%", borderRadius: 30 },
@@ -174,5 +153,3 @@ const styles = StyleSheet.create({
   welcome: { alignItems: "center" },
   welcomeText: { fontSize: 24, fontWeight: "bold" },
 });
-
-export default Signin;

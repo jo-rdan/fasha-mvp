@@ -12,7 +12,7 @@ import {
 } from "@ui-kitten/components";
 import { useState } from "react/cjs/react.development";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import axios from "axios";
 import { API_URL } from "dotenv";
 
@@ -20,6 +20,7 @@ const Profile = (props) => {
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
+  const route = useRoute();
 
   const BackIcon = (props) => <Icon {...props} name='arrow-back' />;
 
@@ -55,13 +56,13 @@ const Profile = (props) => {
         return navigation.navigate("Signup");
       }
     } catch (error) {
-      if (error.response.status === 401)
+      if (error.response && error.response.status === 401)
         return Alert.alert(
           "Authentication failed!",
           "You need to sign in to perform this action",
           [{ text: `Sign in`, onPress: () => navigation.navigate("Signin") }]
         );
-      if (error.response.status === 404)
+      if (error.response && error.response.status === 404)
         return Alert.alert("User not found!", error.response.data.error, [
           { text: `Sign up`, onPress: () => navigation.navigate("Signup") },
         ]);
@@ -72,7 +73,12 @@ const Profile = (props) => {
     <View style={styles.container}>
       <TopNavigation
         accessoryLeft={BackAction}
-        title='Eva Application'
+        title={() => (
+          <Text style={styles.title}>
+            {route.params ? `${route.params.fullNames}` : "User"}
+          </Text>
+        )}
+        subtitle={route.params ? `@${route.params.username}` : "@Username"}
         accessoryRight={SettingsAction}
       />
       <View style={styles.buttonContainer}>
@@ -114,16 +120,22 @@ const Profile = (props) => {
 export default Profile;
 
 const styles = StyleSheet.create({
+  buttonContainer: {
+    marginVertical: 26,
+  },
   container: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
-  buttonContainer: {
-    marginVertical: 26,
-  },
+  header: { minHeight: 128 },
   spinner: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "black",
   },
 });
