@@ -16,63 +16,63 @@ import { API_URL } from "dotenv";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-function Signin(props) {
+function Signin({ onSignin, loading }) {
   const [userData, setUserData] = useState({
     userEmail: "",
     userPassword: "",
   });
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
-  const handleSubmit = async () => {
-    try {
-      const { userEmail, userPassword } = userData;
-      const isValid = validateEmail(userEmail);
+  // const handleSubmit = async () => {
+  //   try {
+  //     const { userEmail, userPassword } = userData;
+  //     const isValid = validateEmail(userEmail);
 
-      if (!isValid)
-        return Alert.alert(
-          "Invalid email",
-          "Please make sure your email is valid",
-          [{ text: "OK", onPress: () => console.log("Thank you!") }]
-        );
+  //     if (!isValid)
+  //       return Alert.alert(
+  //         "Invalid email",
+  //         "Please make sure your email is valid",
+  //         [{ text: "OK", onPress: () => console.log("Thank you!") }]
+  //       );
 
-      if (!userPassword)
-        return Alert.alert(
-          "Missing password",
-          "Please make sure you input your password",
-          [{ text: "OK", onPress: () => console.log("Thank you!") }]
-        );
-      setLoading(true);
-      Keyboard.dismiss();
-      const response = await axios.post(`${API_URL}/users/signin`, {
-        email: userEmail,
-        password: userPassword,
-      });
-      if (response.status === 200) {
-        setLoading(false);
-        await AsyncStorage.setItem("token", response.data.data);
-        return navigation.navigate("Profile");
-      }
-    } catch (error) {
-      setLoading(false);
-      if (error.response && error.response.status === 404)
-        return Alert.alert("User not found", error.response.data.error, [
-          {
-            text: "sign me up",
-            onPress: () => navigation.navigate("Signup"),
-          },
-        ]);
-      if (error.response && error.response.status === 401) {
-        setUserData({ ...userData, userPassword: "" });
-        return Alert.alert("Incorrect credentials", error.response.data.error, [
-          {
-            text: "Try again",
-            onPress: () => setUserData({ ...userData, userPassword: "" }),
-          },
-        ]);
-      }
-    }
-  };
+  //     if (!userPassword)
+  //       return Alert.alert(
+  //         "Missing password",
+  //         "Please make sure you input your password",
+  //         [{ text: "OK", onPress: () => console.log("Thank you!") }]
+  //       );
+  //     setLoading(true);
+  //     Keyboard.dismiss();
+  //     const response = await axios.post(`${API_URL}/users/signin`, {
+  //       email: userEmail,
+  //       password: userPassword,
+  //     });
+  //     if (response.status === 200) {
+  //       await AsyncStorage.setItem("token", response.data.data);
+  //       setLoading(false);
+  //       return navigation.navigate("Profile");
+  //     }
+  //   } catch (error) {
+  //     setLoading(false);
+  //     if (error.response && error.response.status === 404)
+  //       return Alert.alert("User not found", error.response.data.error, [
+  //         {
+  //           text: "sign me up",
+  //           onPress: () => navigation.navigate("Signup"),
+  //         },
+  //       ]);
+  //     if (error.response && error.response.status === 401) {
+  //       setUserData({ ...userData, userPassword: "" });
+  //       return Alert.alert("Incorrect credentials", error.response.data.error, [
+  //         {
+  //           text: "Try again",
+  //           onPress: () => setUserData({ ...userData, userPassword: "" }),
+  //         },
+  //       ]);
+  //     }
+  //   }
+  // };
   return (
     <View style={styles.container}>
       <View style={styles.logoBox}>
@@ -113,7 +113,7 @@ function Signin(props) {
         </View>
       </View>
       <View style={styles.btnParent}>
-        <Button style={styles.btn} onPress={handleSubmit}>
+        <Button style={styles.btn} onPress={() => onSignin(userData)}>
           {!loading ? "Log in" : <Spinner status='basic' size='small' />}
         </Button>
         <Text>

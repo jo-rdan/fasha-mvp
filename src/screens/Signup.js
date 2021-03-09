@@ -17,59 +17,59 @@ import { validateEmail } from "../helpers/emailValidation";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default Signup = (props) => {
+export default Signup = ({ onSignup, loading }) => {
   const [userData, setUserData] = useState({
     userEmail: "",
     userPassword: "",
   });
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [isMatch, setIsMatch] = useState(false);
 
   const navigation = useNavigation();
 
-  const handleSubmit = async () => {
-    try {
-      const { userEmail, userPassword } = userData;
-      const isValid = validateEmail(userEmail);
+  // const handleSubmit = async () => {
+  //   try {
+  //     const { userEmail, userPassword } = userData;
+  //     const isValid = validateEmail(userEmail);
 
-      if (!isValid)
-        return Alert.alert(
-          "Invalid email",
-          "Please make sure your email is valid",
-          [{ text: "OK", onPress: () => console.log("Thank you!") }]
-        );
+  //     if (!isValid)
+  //       return Alert.alert(
+  //         "Invalid email",
+  //         "Please make sure your email is valid",
+  //         [{ text: "OK", onPress: () => console.log("Thank you!") }]
+  //       );
 
-      if (!isMatch)
-        return Alert.alert(
-          "Password mismatch!",
-          "Make sure both passwords match",
-          [{ text: "OK", onPress: () => console.log("Thank you!") }]
-        );
-      setLoading(true);
-      Keyboard.dismiss();
-      const response = await axios.post(`${API_URL}/users/signup`, {
-        email: userEmail,
-        password: userPassword,
-      });
-      if (response.status === 201) {
-        setLoading(false);
-        await AsyncStorage.setItem("token", response.data.data);
-        return navigation.navigate("SetupProfile", {
-          email: userData.userEmail,
-        });
-      }
-    } catch (error) {
-      setLoading(false);
-      if (error.response && error.response.status === 409)
-        return Alert.alert("User already exists", error.response.data.error, [
-          {
-            text: "Yes, sign me in",
-            onPress: () => navigation.navigate("Signin"),
-          },
-        ]);
-      return null;
-    }
-  };
+  //     if (!isMatch)
+  //       return Alert.alert(
+  //         "Password mismatch!",
+  //         "Make sure both passwords match",
+  //         [{ text: "OK", onPress: () => console.log("Thank you!") }]
+  //       );
+  //     setLoading(true);
+  //     Keyboard.dismiss();
+  //     const response = await axios.post(`${API_URL}/users/signup`, {
+  //       email: userEmail,
+  //       password: userPassword,
+  //     });
+  //     if (response.status === 201) {
+  //       setLoading(false);
+  //       await AsyncStorage.setItem("token", response.data.data);
+  //       return navigation.navigate("SetupProfile", {
+  //         email: userData.userEmail,
+  //       });
+  //     }
+  //   } catch (error) {
+  //     setLoading(false);
+  //     if (error.response && error.response.status === 409)
+  //       return Alert.alert("User already exists", error.response.data.error, [
+  //         {
+  //           text: "Yes, sign me in",
+  //           onPress: () => navigation.navigate("Signin"),
+  //         },
+  //       ]);
+  //     return null;
+  //   }
+  // };
 
   return (
     <View style={styles.container}>
@@ -123,7 +123,10 @@ export default Signup = (props) => {
         </View>
       </View>
       <View style={styles.btnParent}>
-        <Button style={styles.btn} onPress={handleSubmit}>
+        <Button
+          style={styles.btn}
+          onPress={() => onSignup(userData, isMatch, navigation)}
+        >
           {!loading ? "Next" : <Spinner status='basic' size='small' />}
         </Button>
         <Text>
