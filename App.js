@@ -32,6 +32,7 @@ import { API_URL } from "dotenv";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { validateEmail } from "./src/helpers/emailValidation";
 import { isLoading } from "expo-font";
+import EditProfile from "./src/screens/EditProfile.js";
 
 const Stack = createStackNavigator();
 
@@ -51,7 +52,9 @@ export function App({ loading }) {
         <View>
           <Button
             appearance='ghost'
-            onPress={() => navigation.navigate("Signin")}
+            onPress={() => {
+              navigation.navigate("Signin");
+            }}
           >
             Continue
           </Button>
@@ -152,10 +155,12 @@ export default () => {
       });
 
       if (response.status === 201) {
+        // console.log('ressssssssssss', response.data.data);
+
         setLoading(false);
         return navigation.navigate("SetupProfile", {
           email: userEmail,
-          token: response.data.token,
+          token: response.data.data,
         });
       }
     } catch (error) {
@@ -192,10 +197,14 @@ export default () => {
       );
       if (response.status === 200) {
         setLoading(false);
+        // console.log('ressssssssssss', route.params);
         await AsyncStorage.setItem("token", route.params.token);
-        return setIsAuth(true);
+        setIsAuth(true);
+        return ;
       }
     } catch (error) {
+      console.log('errrrrrrrrrrr', error);
+
       setLoading(false);
       if (error.response && error.response.status === 404)
         return Alert.alert(
@@ -272,17 +281,24 @@ export default () => {
         <NavigationContainer>
           <Stack.Navigator>
             {isAuth ? (
-              <Stack.Screen name='Profile' options={{ headerShown: false }}>
-                {(props) => (
-                  <Profile
-                    {...props}
-                    onLogout={handleLogout}
-                    onDelete={handleDeleteUser}
-                    loading={loading}
-                    setLoading={setLoading}
-                  />
-                )}
-              </Stack.Screen>
+              <>
+                <Stack.Screen name='Profile' options={{ headerShown: false }}>
+                  {(props) => (
+                    <Profile
+                      {...props}
+                      onLogout={handleLogout}
+                      onDelete={handleDeleteUser}
+                      loading={loading}
+                      setLoading={setLoading}
+                    />
+                  )}
+                </Stack.Screen>
+                <Stack.Screen
+                  name='Edit Profile'
+                  component={EditProfile}
+                  options={{ headerShown: false }}
+                />
+              </>
             ) : (
               <>
                 <Stack.Screen name='App' options={{ headerShown: false }}>

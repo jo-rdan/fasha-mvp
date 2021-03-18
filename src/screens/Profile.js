@@ -17,11 +17,16 @@ import {
   OverflowMenu,
   MenuItem,
   Avatar,
+  Layout,
   Spinner,
 } from "@ui-kitten/components";
 import { Icon as Icons } from "react-native-eva-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import {
+  useIsFocused,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import axios from "axios";
 import { FASHA_KEY, API_URL } from "dotenv";
 import jwt from "expo-jwt";
@@ -31,6 +36,7 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
   const [visible, setVisible] = useState(false);
   const [user, setUser] = useState({});
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
   const route = useRoute();
 
   const BackIcon = (props) => <Icon {...props} name='arrow-back' />;
@@ -43,27 +49,32 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
 
   const SettingsIcon = (props) => <Icon {...props} name='settings-outline' />;
 
+  const SettingsAction = () => (
+    <TopNavigationAction icon={SettingsIcon} onPress={() => setVisible(true)} />
+  );
+
   const SettingsIconAnchor = (props) => (
     <Icon {...props} name='settings' style={{ display: "none" }} />
   );
 
   useEffect(() => {
     const fetchToken = async () => {
-      const token = await AsyncStorage.getItem("token");
-      // const userData = await jwt.decode(token, `${FASHA_KEY}`);
-      setLoading(true);
-      const response = await axios.get(`${API_URL}/users/user/profile`, {
-        headers: { token: `${token}` },
-      });
-      setLoading(false);
-      setUser(response.data.data);
+      try {
+        const token = await AsyncStorage.getItem("token");
+        // const userData = await jwt.decode(token, `${FASHA_KEY}`);
+        setLoading(true);
+        const response = await axios.get(`${API_URL}/users/user/profile`, {
+          headers: { token },
+        });
+        setLoading(false);
+        setUser(response.data.data);
+        return;
+      } catch (error) {
+        //  console.log('====', error.response.data);
+      }
     };
     fetchToken();
-  }, []);
-
-  const SettingsAction = () => (
-    <TopNavigationAction icon={SettingsIcon} onPress={() => setVisible(true)} />
-  );
+  }, [isFocused]);
 
   // const onLogout = async () => {
   //   setVisible(false);
@@ -74,7 +85,7 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
   // };
 
   return (
-    <View style={styles.container}>
+    <Layout style={styles.container}>
       <TopNavigation
         accessoryLeft={BackAction}
         title={() => <Text style={styles.title}>{user.fullNames}</Text>}
@@ -88,7 +99,15 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
           placement='bottom end'
           onBackdropPress={() => setVisible(false)}
         >
-          <MenuItem title='Edit Profile' disabled />
+          <MenuItem
+            title='Edit Profile'
+            onPress={() => {
+              setVisible(false);
+              navigation.navigate("Edit Profile", {
+                ...user,
+              });
+            }}
+          />
           <MenuItem title='Logout' onPress={() => onLogout(setVisible)} />
           <MenuItem
             title={(props) => (
@@ -131,10 +150,7 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
         <View style={styles.profileContainer}>
           <View>
             {user.image ? (
-              <Image
-                source={require("../assets/app/profile.jpeg")}
-                style={styles.avatar}
-              />
+              <Image source={{ uri: user.image }} style={styles.avatar} />
             ) : (
               <View
                 style={{
@@ -235,7 +251,7 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
       <View>
         <BottomNav />
       </View>
-    </View>
+    </Layout>
   );
 };
 
