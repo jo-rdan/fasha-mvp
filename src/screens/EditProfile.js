@@ -40,7 +40,7 @@ const EditProfile = (props) => {
   const data = ["Choose privacy option", "public", "private"];
   const [selectedIndex, setSelectedIndex] = useState(new IndexPath(0));
   const [user, setUser] = useState({
-    fullNames: route.params.fullNames,
+    fullnames: route.params.fullnames,
     username: route.params.username,
     imageUri: route.params.image,
     image: "",
@@ -49,16 +49,16 @@ const EditProfile = (props) => {
   const [userProfile, setUserProfile] = useState({});
   const [loading, setLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = await AsyncStorage.getItem("token");
-      const data = jwt.decode(token, FASHA_KEY);
-      setUserProfile(data);
-      return;
-    };
+  // useEffect(() => {
+  //   const fetchUser = async () => {
+  //     const token = await AsyncStorage.getItem("token");
+  //     const data = jwt.decode(token, FASHA_KEY);
+  //     setUserProfile(data);
+  //     return;
+  //   };
 
-    fetchUser();
-  }, []);
+  //   fetchUser();
+  // }, []);
   const BackIcon = (props) => <Icon {...props} name='arrow-back' />;
 
   const BackAction = () => (
@@ -124,13 +124,12 @@ const EditProfile = (props) => {
   const handleEdit = async () => {
     Keyboard.dismiss();
     try {
-      const { id } = userProfile;
+      // const { id } = userProfile;
       const { imageUri, ...userData } = user;
-
       const token = await AsyncStorage.getItem("token");
       setIsUpdating(true);
       const response = await axios.patch(
-        `${API_URL}/users/edit-profile?id=${id.trim()}`,
+        `${API_URL}/users/edit-profile`,
         {
           ...userData,
         },
@@ -153,6 +152,7 @@ const EditProfile = (props) => {
         title={() => <Text style={styles.title}>Edit Profile</Text>}
         accessoryRight={CheckAction}
       />
+
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <Layout style={styles.body}>
           <Layout style={styles.userImage}>
@@ -193,7 +193,7 @@ const EditProfile = (props) => {
                 autoCorrect={false}
                 placeholder='Full Names'
                 style={styles.input}
-                value={user.fullNames}
+                value={user.fullnames}
                 onChangeText={(fullNames) => setUser({ ...user, fullNames })}
               />
               <TextInput
