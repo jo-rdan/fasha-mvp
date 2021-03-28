@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Image, StyleSheet, TextInput, View } from "react-native";
+import { Image, StyleSheet, TextInput, View, Keyboard } from "react-native";
 import {
   Avatar,
   Button,
@@ -133,6 +133,7 @@ const AddPost = (props) => {
   };
 
   const handleAddPost = async () => {
+    Keyboard.dismiss();
     try {
       const { postCaption, postImage } = post;
       const token = await AsyncStorage.getItem("token");

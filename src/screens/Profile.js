@@ -9,6 +9,7 @@ import {
   TextInput,
   ScrollView,
   KeyboardAvoidingView,
+  TouchableHighlight,
 } from "react-native";
 import {
   Text,
@@ -43,11 +44,13 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
   const [visible, setVisible] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [user, setUser] = useState({});
-  const [isOpen, setIsOpenh] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const route = useRoute();
   const panelRef = useRef(null);
+
+  let postId;
 
   const BackIcon = (props) => <Icon {...props} name='arrow-back' />;
 
@@ -71,6 +74,7 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
 
   useEffect(() => {
     const fetchToken = async () => {
+      console.log("doooooo");
       try {
         if (!isFocused) return;
         const token = await AsyncStorage.getItem("token");
@@ -86,7 +90,9 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
       }
     };
     fetchToken();
-  }, [isFocused]);
+
+    return () => setIsDeleted(false);
+  }, [isFocused, isDeleted]);
 
   // const onLogout = async () => {
   //   setVisible(false);
@@ -133,6 +139,31 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
     return null;
   };
 
+  const handleDeletePost = async () => {
+    panelRef.current.togglePanel();
+    try {
+      const token = await AsyncStorage.getItem("token");
+      setLoading(true);
+      const response = await axios.delete(`${API_URL}/posts/${postId}`, {
+        headers: { token },
+      });
+      if (response.status === 200) {
+        setLoading(false);
+        setIsDeleted(true);
+        return Alert.alert("Success", response.data.message, [
+          {
+            text: "OK",
+            onPress: () => setIsDeleted(false),
+          },
+        ]);
+      }
+      setLoading(false);
+      return;
+    } catch (error) {
+      return error.response.data;
+    }
+  };
+
   const renderRightActions = () => (
     <React.Fragment>
       <TopNavigationAction
@@ -165,14 +196,14 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
                 marginLeft: 8,
                 marginRight: 8,
                 width: "90%",
-                color: "white",
                 fontSize: 13,
               }}
+              status='danger'
             >
               Delete account
             </Text>
           )}
-          style={{ backgroundColor: "red" }}
+          // style={{ color: "red" }}
           onPress={() => {
             setVisible(false);
             Alert.alert(
@@ -258,7 +289,7 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
           </View>
         </View>
 
-        {user && user.posts ? (
+        {user && user.posts && user.posts.length > 0 ? (
           user.posts.length > 0 &&
           user.posts.map((post) => {
             const elapsed = handleDate(new Date(), +new Date(post.createdAt));
@@ -318,7 +349,10 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
                       name='more-horizontal-outline'
                       fill='#8f9bb3'
                       height={18}
-                      onPress={() => panelRef.current.togglePanel()}
+                      onPress={() => {
+                        postId = post.uuid;
+                        panelRef.current.togglePanel();
+                      }}
                     />
                   </View>
                 </View>
@@ -336,7 +370,7 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
           })
         ) : (
           <View style={styles.noPost}>
-            <Text category='h5'>No posts yet</Text>
+            <Text category='h5'>No posts found</Text>
             <Image
               source={require("../assets/app/post.png")}
               style={styles.noPostImage}
@@ -348,24 +382,35 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
         <BottomNav />
       </View>
       <BottomSheet
-        ref={(ref) => (panelRef.current = ref)}
+        ref={(ref) => {
+          panelRef.current = ref;
+        }}
         sliderMinHeight={0}
-        isOpen={isOpen}
+        isOpen={false}
       >
         {[
           { title: "Edit post", icon: "edit-2-outline" },
-          { title: "Delete post", icon: "trash-2-outline" },
+          {
+            title: "Delete post",
+            icon: "trash-2-outline",
+            onPress: handleDeletePost,
+          },
         ].map((item, index) => {
           return (
             <View key={index}>
-              <Layout style={{ flexDirection: "row", paddingVertical: "5%" }}>
-                <Layout style={{ width: "15%" }}>
-                  <Icons name={`${item.icon}`} fill='#8f9bb3' height={20} />
-                </Layout>
-                <Layout>
-                  <Text>{item.title}</Text>
-                </Layout>
-              </Layout>
+              <TouchableHighlight
+                onPress={item.onPress}
+                underlayColor='#F1F1F1'
+              >
+                <View style={{ flexDirection: "row", paddingVertical: "5%" }}>
+                  <View style={{ width: "15%" }}>
+                    <Icons name={`${item.icon}`} fill='#8f9bb3' height={20} />
+                  </View>
+                  <View>
+                    <Text>{item.title}</Text>
+                  </View>
+                </View>
+              </TouchableHighlight>
               <Divider />
             </View>
           );
@@ -419,8 +464,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     width: "100%",
   },
-  noPost: { flex: 1, alignItems: "center", justifyContent: "center" },
-  noPostImage: { width: "20%", height: "20%" },
+  noPost: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "space-between",
+    height: 200,
+  },
+  noPostImage: { width: "50%", height: 100 },
   numbersContainer: {
     width: 50,
     alignItems: "center",
