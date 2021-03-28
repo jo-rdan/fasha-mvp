@@ -33,7 +33,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { validateEmail } from "./src/helpers/emailValidation";
 import { isLoading } from "expo-font";
 import EditProfile from "./src/screens/EditProfile.js";
-
+import AddPost from "./src/screens/AddPost.js";
 const Stack = createStackNavigator();
 
 export function App({ loading }) {
@@ -80,7 +80,7 @@ export default () => {
         return <App loading={isLoading} />;
       }
       setIsLoading(false);
-      console.log("isLoading", isLoading);
+      console.log("isLoading", loading);
       return setIsAuth(true);
     };
     fetchToken();
@@ -111,6 +111,7 @@ export default () => {
       });
       if (response.status === 200) {
         setLoading(false);
+        console.log("ride", response.data);
         await AsyncStorage.removeItem("token");
         return setIsAuth(false);
         // return navigation.navigate("Signup");
@@ -188,22 +189,23 @@ export default () => {
 
       setLoading(true);
       Keyboard.dismiss();
+      console.log("ressssssssssss", route.params);
       const response = await axios.patch(
-        `${API_URL}/users/setup-profile?email=${route.params.email}`,
+        `${API_URL}/users/edit-profile?email=${route.params.email}`,
         {
-          fullNames,
+          fullnames: fullNames,
           username,
-        }
+        },
+        { headers: { token: route.params.token } }
       );
       if (response.status === 200) {
         setLoading(false);
-        // console.log('ressssssssssss', route.params);
         await AsyncStorage.setItem("token", route.params.token);
         setIsAuth(true);
-        return ;
+        return;
       }
     } catch (error) {
-      console.log('errrrrrrrrrrr', error);
+      console.log("errrrrrrrrrrr", error);
 
       setLoading(false);
       if (error.response && error.response.status === 404)
@@ -296,6 +298,11 @@ export default () => {
                 <Stack.Screen
                   name='Edit Profile'
                   component={EditProfile}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name='Add Post'
+                  component={AddPost}
                   options={{ headerShown: false }}
                 />
               </>
