@@ -157,6 +157,7 @@ const AddPost = (props) => {
     }
   };
 
+  console.log("image", image);
   return (
     <Layout style={styles.container}>
       <Modal
@@ -245,7 +246,7 @@ export default AddPost;
 
 const styles = StyleSheet.create({
   backdrop: {
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
   },
   card: {
     height: "100%",

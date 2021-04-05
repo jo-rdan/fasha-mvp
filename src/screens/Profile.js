@@ -86,7 +86,7 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
         setUser(response.data.data);
         return;
       } catch (error) {
-        console.log("<====", error.response.data);
+        console.log("<====1", error.response.data);
       }
     };
     fetchToken();
@@ -160,6 +160,13 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
       setLoading(false);
       return;
     } catch (error) {
+      if (error.response.status === 403)
+        return Alert.alert("Error", error.response.data.message, [
+          {
+            text: "OK",
+            onPress: () => setIsDeleted(false),
+          },
+        ]);
       return error.response.data;
     }
   };
@@ -203,7 +210,6 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
               Delete account
             </Text>
           )}
-          // style={{ color: "red" }}
           onPress={() => {
             setVisible(false);
             Alert.alert(
@@ -228,12 +234,6 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
         subtitle={user && user.username ? `@${user.username}` : ""}
         accessoryRight={renderRightActions}
       />
-
-      {/* <AddPost
-        visible={showModal}
-        onHide={onHide}
-        image={!user ? "" : user.image}
-      /> */}
       <ScrollView>
         {loading ? (
           <View style={styles.spinner}>
@@ -262,19 +262,27 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
               </View>
             )}
           </View>
-          <View style={styles.numbersContainer}>
-            <Text style={styles.numbers}>
-              {user && user.posts ? user.posts.length : 0}
-            </Text>
-            <Text>Posts</Text>
-          </View>
-          <View style={styles.numbersContainer}>
-            <Text style={styles.numbers}>0</Text>
-            <Text>Groups</Text>
-          </View>
-          <View style={styles.numbersContainer}>
-            <Text style={styles.numbers}>0</Text>
-            <Text>Stories</Text>
+          <View
+            style={{
+              width: "60%",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <View style={styles.numbersContainer}>
+              <Text style={styles.numbers}>
+                {user && user.posts ? user.posts.length : 0}
+              </Text>
+              <Text>Posts</Text>
+            </View>
+            <View style={styles.numbersContainer}>
+              <Text style={styles.numbers}>0</Text>
+              <Text>Groups</Text>
+            </View>
+            <View style={styles.numbersContainer}>
+              <Text style={styles.numbers}>0</Text>
+              <Text>Stories</Text>
+            </View>
           </View>
         </View>
         <View style={styles.bioContainer}>
@@ -294,78 +302,76 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
           user.posts.map((post) => {
             const elapsed = handleDate(new Date(), +new Date(post.createdAt));
             return (
-              <Card style={styles.posts} key={post.uuid}>
-                <View style={styles.postContainer}>
-                  <View style={styles.postAvatar}>
-                    <Avatar size='medium' source={{ uri: user.image }} />
-                  </View>
-                  <View style={styles.postUser}>
-                    <View style={styles.postHeader}>
-                      <Text style={styles.numbers}>{user.fullnames}</Text>
-                      <Text appearance='hint' style={styles.postUsername}>
-                        {`@${user.username}`}
-                      </Text>
+              <TouchableHighlight
+                key={post.uuid}
+                underlayColor='#F1F1F1'
+                onPress={() => navigation.navigate("Post", { uuid: post.uuid })}
+              >
+                <View style={styles.posts}>
+                  <View style={styles.postContainer}>
+                    <View style={styles.postAvatar}>
+                      <Avatar size='medium' source={{ uri: user.image }} />
                     </View>
-                    <View style={styles.postTime}>
-                      <Text appearance='hint' style={{ fontSize: 12 }}>
-                        {/* {post.createdAt} */}
-                        {elapsed
-                          ? elapsed
-                          : `${new Date(post.createdAt).getDate()}-${new Date(
-                              post.createdAt
-                            ).getMonth()}-${new Date(
-                              post.createdAt
-                            ).getFullYear()}`}
-                      </Text>
+                    <View style={styles.postUser}>
+                      <View style={styles.postHeader}>
+                        <Text style={styles.numbers}>{user.fullnames}</Text>
+                        <Text appearance='hint' style={styles.postUsername}>
+                          {`@${user.username}`}
+                        </Text>
+                      </View>
+                      <View style={styles.postTime}>
+                        <Text appearance='hint' style={{ fontSize: 12 }}>
+                          {elapsed
+                            ? elapsed
+                            : `${new Date(post.createdAt).getDate()}-${new Date(
+                                post.createdAt
+                              ).getMonth()}-${new Date(
+                                post.createdAt
+                              ).getFullYear()}`}
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-                <View style={styles.postMedia}>
-                  <View style={styles.postCaption}>
-                    {post.postcaption ? <Text>{post.postcaption}</Text> : null}
+                  <View style={styles.postMedia}>
+                    <View style={styles.postCaption}>
+                      {post.postcaption ? (
+                        <Text>{post.postcaption}</Text>
+                      ) : null}
+                    </View>
+                    <View>
+                      {post.postmedia ? (
+                        <Image
+                          source={{ uri: post.postmedia }}
+                          style={styles.postImage}
+                        />
+                      ) : (
+                        <Layout></Layout>
+                      )}
+                    </View>
                   </View>
-                  <View>
-                    {post.postmedia ? (
-                      <Image
-                        source={{ uri: post.postmedia }}
-                        style={styles.postImage}
+                  <View style={{ flexDirection: "row" }}>
+                    <View style={{ width: "8%" }}>
+                      <Icons
+                        name='message-circle-outline'
+                        fill='#8f9bb3'
+                        height={18}
                       />
-                    ) : (
-                      <Layout></Layout>
-                    )}
+                    </View>
+                    <Text appearance='hint'>{post.comments.length}</Text>
+                    <View style={{ width: "20%" }}>
+                      <Icons
+                        name='more-horizontal-outline'
+                        fill='#8f9bb3'
+                        height={18}
+                        onPress={() => {
+                          postId = post.uuid;
+                          panelRef.current.togglePanel();
+                        }}
+                      />
+                    </View>
                   </View>
                 </View>
-                <View style={{ flexDirection: "row" }}>
-                  <View style={{ width: "8%" }}>
-                    <Icons
-                      name='message-circle-outline'
-                      fill='#8f9bb3'
-                      height={18}
-                    />
-                  </View>
-                  <Text appearance='hint'>{post.comments.length}</Text>
-                  <View style={{ width: "20%" }}>
-                    <Icons
-                      name='more-horizontal-outline'
-                      fill='#8f9bb3'
-                      height={18}
-                      onPress={() => {
-                        postId = post.uuid;
-                        panelRef.current.togglePanel();
-                      }}
-                    />
-                  </View>
-                </View>
-                {/* <View>
-                  <TextInput
-                    underlineColorAndroid='transparent'
-                    placeholder='Comment'
-                    style={styles.input}
-                    autoCompleteType='email'
-                    autoCapitalize='none'
-                  />
-                </View> */}
-              </Card>
+              </TouchableHighlight>
             );
           })
         ) : (
@@ -389,7 +395,10 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
         isOpen={false}
       >
         {[
-          { title: "Edit post", icon: "edit-2-outline" },
+          {
+            title: "Edit post",
+            icon: "edit-2-outline",
+          },
           {
             title: "Delete post",
             icon: "trash-2-outline",
@@ -480,7 +489,7 @@ const styles = StyleSheet.create({
     // marginTop: 20,
 
     justifyContent: "space-between",
-    padding: "2%",
+    padding: "6%",
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderTopColor: "#eaebec",

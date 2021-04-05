@@ -34,6 +34,9 @@ import { validateEmail } from "./src/helpers/emailValidation";
 import { isLoading } from "expo-font";
 import EditProfile from "./src/screens/EditProfile.js";
 import AddPost from "./src/screens/AddPost.js";
+import Comments from "./src/screens/Post.js";
+import Post from "./src/screens/Post.js";
+import EditComment from "./src/screens/shared/EditComment.js";
 const Stack = createStackNavigator();
 
 export function App({ loading }) {
@@ -156,8 +159,6 @@ export default () => {
       });
 
       if (response.status === 201) {
-        // console.log('ressssssssssss', response.data.data);
-
         setLoading(false);
         return navigation.navigate("SetupProfile", {
           email: userEmail,
@@ -254,9 +255,6 @@ export default () => {
         // return navigation.navigate("Profile");
       }
     } catch (error) {
-      console.log("====================================");
-      console.log(error, "<--------");
-      console.log("====================================");
       setLoading(false);
       if (error.response && error.response.status === 404)
         return Alert.alert("User not found", error.response.data.error, [
@@ -266,7 +264,7 @@ export default () => {
           },
         ]);
       if (error.response && error.response.status === 401) {
-        setUserData({ ...userData, userPassword: "" });
+        // setUserData({ ...userData, userPassword: "" });
         return Alert.alert("Incorrect credentials", error.response.data.error, [
           {
             text: "Try again",
@@ -303,6 +301,16 @@ export default () => {
                 <Stack.Screen
                   name='Add Post'
                   component={AddPost}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name='Post'
+                  component={Post}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name='Edit Comment'
+                  component={EditComment}
                   options={{ headerShown: false }}
                 />
               </>
