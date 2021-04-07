@@ -169,13 +169,6 @@ const Comments = React.forwardRef(
                           name='more-horizontal-outline'
                           fill='#8f9bb3'
                           height={18}
-                          data={[
-                            { title: "Edit post", icon: "edit-2-outline" },
-                            {
-                              title: "Delete post",
-                              icon: "trash-2-outline",
-                            },
-                          ]}
                           onPress={() => {
                             setChangeData({
                               data: {
