@@ -387,7 +387,13 @@ const Post = (props) => {
             title: `Edit ${!changeData.change ? "post" : "comment"}`,
             icon: "edit-2-outline",
             onPress: !changeData.change
-              ? null
+              ? () => {
+                  panelRef.current.togglePanel();
+                  navigation.navigate("Edit Post", {
+                    image: post && post.user && post.user.image,
+                    post: post && post,
+                  });
+                }
               : () => {
                   panelRef.current.togglePanel();
                   navigation.navigate("Edit Comment", {

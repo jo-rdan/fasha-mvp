@@ -43,6 +43,7 @@ import AddPost from "./AddPost";
 const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
   const [visible, setVisible] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [selectedPost, setSelectedPost] = useState({});
   const [user, setUser] = useState({});
   const [isDeleted, setIsDeleted] = useState(false);
   const navigation = useNavigation();
@@ -365,6 +366,7 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
                         height={18}
                         onPress={() => {
                           postId = post.uuid;
+                          setSelectedPost(post);
                           panelRef.current.togglePanel();
                         }}
                       />
@@ -398,6 +400,13 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
           {
             title: "Edit post",
             icon: "edit-2-outline",
+            onPress: () => {
+              panelRef.current.togglePanel();
+              navigation.navigate("Edit Post", {
+                image: user && user.image,
+                post: selectedPost,
+              });
+            },
           },
           {
             title: "Delete post",

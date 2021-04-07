@@ -37,6 +37,7 @@ import AddPost from "./src/screens/AddPost.js";
 import Comments from "./src/screens/Post.js";
 import Post from "./src/screens/Post.js";
 import EditComment from "./src/screens/shared/EditComment.js";
+import EditPost from "./src/screens/EditPost.js";
 const Stack = createStackNavigator();
 
 export function App({ loading }) {
@@ -311,6 +312,11 @@ export default () => {
                 <Stack.Screen
                   name='Edit Comment'
                   component={EditComment}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name='Edit Post'
+                  component={EditPost}
                   options={{ headerShown: false }}
                 />
               </>

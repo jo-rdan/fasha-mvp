@@ -34,21 +34,20 @@ const GalleryIcon = (props) => (
   <Icon fill='grey' width={20} height={20} {...props} name='image-outline' />
 );
 
-const AddPost = (props) => {
+const EditPost = (props) => {
+  const route = useRoute();
+  const { image, post } = route.params;
   const [isCreating, setIsCreating] = useState(false);
   const [changeColor, setChangeColor] = useState(false);
-  const [post, setPost] = useState({
-    postCaption: "",
-    postImage: "",
-  });
+  const [newPost, setNewPost] = useState(post);
   const [loading, setLoading] = useState(false);
-  const [disable, setDisable] = useState(true);
+  const [disable, setDisable] = useState(newPost ? false : true);
+  const [clearImage, setClearImage] = useState(false);
   const navigation = useNavigation();
-  const route = useRoute();
 
-  const { image } = route.params;
-
-  useEffect(() => {}, []);
+  useEffect(() => {
+    console.log("hhahaha", newPost);
+  }, []);
 
   // const MusicIcon = (props) => (
   //   <Icon
@@ -84,11 +83,16 @@ const AddPost = (props) => {
     }
     return true;
   };
-
-  const handlePostCaption = (postCaption) => {
-    if (postCaption === "") return setDisable(true);
-    setPost({ ...post, postCaption });
+  const handlePostCaption = (postcaption) => {
+    setNewPost({ ...post, postcaption });
     setDisable(false);
+    return;
+  };
+
+  const handleClearImage = () => {
+    setClearImage(true);
+    setNewPost({ ...newPost, postmedia: "" });
+    if (!newPost.postcaption) return setDisable(true);
     return;
   };
 
@@ -105,6 +109,7 @@ const AddPost = (props) => {
           base64: true,
         });
         if (!image.cancelled) {
+          setClearImage(false);
           let base64Img = `data:image/jpg;base64,${image.base64}`;
           const file = {
             file: base64Img,
@@ -119,9 +124,8 @@ const AddPost = (props) => {
             method: "POST",
           });
           const res = await response.json();
-          console.log(res);
           setDisable(false);
-          setPost({ ...post, postImage: res.secure_url });
+          setNewPost({ ...post, postmedia: res.secure_url });
           setLoading(false);
           return;
         }
@@ -132,28 +136,29 @@ const AddPost = (props) => {
     }
   };
 
-  const handleAddPost = async () => {
+  const handleEditPost = async () => {
     Keyboard.dismiss();
     try {
-      const { postCaption, postImage } = post;
+      const { postcaption, postmedia } = newPost;
       const token = await AsyncStorage.getItem("token");
       setIsCreating(true);
-      const res = await axios.post(
-        `${API_URL}/posts/create`,
+      const res = await axios.patch(
+        `${API_URL}/posts/${post.uuid}/edit`,
         {
-          postCaption,
-          postMedia: postImage,
+          postcaption,
+          postmedia,
         },
         { headers: { token } }
       );
       setIsCreating(false);
-      if (res.status === 201) {
+      console.log("res", res.data.data);
+      if (res.status === 200) {
         setChangeColor(true);
         onHide();
         return;
       }
     } catch (error) {
-      console.log("error", error);
+      console.log("error", error.response);
     }
   };
 
@@ -173,14 +178,14 @@ const AddPost = (props) => {
         >
           <Layout style={styles.card}>
             <Layout style={styles.cardHeader}>
-              <Text category='h5'>Add Post</Text>
+              <Text category='h5'>Edit Post</Text>
               <Layout style={styles.headerIcons}>
                 {/* <CheckIcon  /> */}
                 <Button
                   size='tiny'
                   style={{ borderRadius: 50, paddingHorizontal: 20 }}
                   disabled={disable}
-                  onPress={handleAddPost}
+                  onPress={handleEditPost}
                 >
                   {isCreating ? (
                     <View style={{ width: "30%" }}>
@@ -203,6 +208,7 @@ const AddPost = (props) => {
                   underlineColorAndroid='transparent'
                   placeholder='Tell me anything'
                   autoCorrect={false}
+                  defaultValue={post.postcaption || ""}
                   multiline={true}
                   numberOfLines={5}
                   style={styles.input}
@@ -220,12 +226,25 @@ const AddPost = (props) => {
                     <MusicIcon />
                   </Layout> */}
                 </Layout>
-                <Layout>
-                  {post && post.postImage ? (
-                    <Image
-                      source={{ uri: post.postImage }}
-                      style={{ width: 100, height: 100 }}
-                    />
+                <Layout style={{ display: !clearImage ? "flex" : "none" }}>
+                  {!loading && newPost && newPost.postmedia ? (
+                    <View>
+                      <View style={styles.clear}>
+                        <Icon
+                          name='minus-circle'
+                          fill='rgba(191,191,191,0.9)'
+                          height={18}
+                          onPress={handleClearImage}
+                        />
+                      </View>
+                      <Image
+                        source={{ uri: newPost.postmedia }}
+                        style={{
+                          width: 100,
+                          height: 100,
+                        }}
+                      />
+                    </View>
                   ) : (
                     <Layout>
                       {loading ? <Spinner size='small' /> : <Layout></Layout>}
@@ -241,7 +260,7 @@ const AddPost = (props) => {
   );
 };
 
-export default AddPost;
+export default EditPost;
 
 const styles = StyleSheet.create({
   backdrop: {
@@ -255,6 +274,11 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
+  },
+  clear: {
+    top: "10%",
+    right: "8%",
+    zIndex: 1,
   },
   input: {
     borderRadius: 10,
