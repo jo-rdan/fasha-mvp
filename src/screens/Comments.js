@@ -20,6 +20,7 @@ import {
   Icon,
   Divider,
 } from "@ui-kitten/components";
+import Toast from "react-native-toast-message";
 import BottomSheet from "react-native-simple-bottom-sheet";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -56,7 +57,28 @@ const Comments = React.forwardRef(
             return;
           }
         } catch (error) {
-          console.log("<====3", error);
+          setLoading(false);
+          if (error.response.status === 404)
+            return Toast.show({
+              type: "error",
+              text1: "Not found",
+              text2: error.response.data.error,
+              position: "top",
+            });
+          if (error.response.status === 500)
+            return Toast.show({
+              type: "error",
+              text1: "Error",
+              text2: "Something went wrong, try again later",
+              position: "top",
+            });
+
+          return Toast.show({
+            type: "error",
+            text1: "Error",
+            text2: error.message,
+            position: "top",
+          });
         }
       };
       console.log(newComment, "=======");

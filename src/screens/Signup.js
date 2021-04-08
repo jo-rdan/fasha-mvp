@@ -5,12 +5,13 @@ import {
   Image,
   StyleSheet,
   TextInput,
-  Keyboard,
+  KeyboardAvoidingView,
   Alert,
   Platform,
   StatusBar,
 } from "react-native";
 import { Button, Text, Spinner } from "@ui-kitten/components";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import axios from "axios";
 import { API_URL } from "dotenv";
 import { validateEmail } from "../helpers/emailValidation";
@@ -72,80 +73,85 @@ export default Signup = ({ onSignup, loading }) => {
   // };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.logoBox}>
-        <Image
-          resizeMode='cover'
-          source={require("../assets/app/logo.png")}
-          style={styles.logo}
-        />
-      </View>
-      <View style={styles.welcome}>
-        <Text style={styles.welcomeText}>Welcome,</Text>
-        <Text>Create an account to get started!</Text>
-      </View>
-      <View style={styles.form}>
-        <View style={styles.innerForm}>
-          <TextInput
-            underlineColorAndroid='rgba(0,0,0,0)'
-            placeholder='Email'
-            style={styles.input}
-            autoCompleteType='email'
-            autoCapitalize='none'
-            value={userData.userEmail}
-            onChangeText={(userEmail) =>
-              setUserData({ ...userData, userEmail })
-            }
-          />
-          <TextInput
-            underlineColorAndroid='rgba(0,0,0,0)'
-            placeholder='Password'
-            style={styles.input}
-            secureTextEntry={true}
-            autoCapitalize='none'
-            value={userData.userPassword}
-            onChangeText={(userPassword) =>
-              setUserData({ ...userData, userPassword })
-            }
-          />
-          <TextInput
-            underlineColorAndroid='rgba(0,0,0,0)'
-            placeholder='Confirm password'
-            style={styles.input}
-            secureTextEntry={true}
-            autoCapitalize='none'
-            onChangeText={(confirmPass) =>
-              userData.userPassword === confirmPass
-                ? setIsMatch(true)
-                : setIsMatch(false)
-            }
-          />
-        </View>
-      </View>
-      <View style={styles.btnParent}>
-        <Button
-          style={styles.btn}
-          onPress={() => onSignup(userData, isMatch, navigation)}
-        >
-          {!loading ? "Next" : <Spinner status='basic' size='small' />}
-        </Button>
-        <Text>
-          Already have an account?{" "}
-          <Text
-            status='primary'
-            style={styles.span}
-            onPress={() => navigation.navigate("Signin")}
-          >
-            Sign in
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps='handled'
+    >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior='padding'>
+        <View style={styles.container}>
+          <View style={styles.logoBox}>
+            <Image
+              resizeMode='cover'
+              source={require("../assets/app/logo.png")}
+              style={styles.logo}
+            />
+          </View>
+          <View style={styles.welcome}>
+            <Text style={styles.welcomeText}>Welcome,</Text>
+            <Text>Create an account to get started!</Text>
+          </View>
+          <View style={styles.form}>
+            <View style={styles.innerForm}>
+              <TextInput
+                underlineColorAndroid='rgba(0,0,0,0)'
+                placeholder='Email'
+                style={styles.input}
+                autoCompleteType='email'
+                autoCapitalize='none'
+                value={userData.userEmail}
+                onChangeText={(userEmail) =>
+                  setUserData({ ...userData, userEmail })
+                }
+              />
+              <TextInput
+                underlineColorAndroid='rgba(0,0,0,0)'
+                placeholder='Password'
+                style={styles.input}
+                secureTextEntry={true}
+                autoCapitalize='none'
+                value={userData.userPassword}
+                onChangeText={(userPassword) =>
+                  setUserData({ ...userData, userPassword })
+                }
+              />
+              <TextInput
+                underlineColorAndroid='rgba(0,0,0,0)'
+                placeholder='Confirm password'
+                style={styles.input}
+                secureTextEntry={true}
+                autoCapitalize='none'
+                onChangeText={(confirmPass) =>
+                  userData.userPassword === confirmPass
+                    ? setIsMatch(true)
+                    : setIsMatch(false)
+                }
+              />
+            </View>
+          </View>
+          <View style={styles.btnParent}>
+            <Button
+              style={styles.btn}
+              onPress={() => onSignup(userData, isMatch, navigation)}
+            >
+              {!loading ? "Next" : <Spinner status='basic' size='small' />}
+            </Button>
+            <Text>
+              Already have an account?{" "}
+              <Text
+                status='primary'
+                style={styles.span}
+                onPress={() => navigation.navigate("Signin")}
+              >
+                Sign in
+              </Text>
+            </Text>
+          </View>
+          <Text appearance='hint' style={styles.footer}>
+            All rights reserved &copy; 2021 Fasha
           </Text>
-        </Text>
-      </View>
-      <View>
-        <Text appearance='hint' style={styles.footer}>
-          All rights reserved &copy; 2021 Fasha
-        </Text>
-      </View>
-    </View>
+        </View>
+      </KeyboardAvoidingView>
+    </ScrollView>
   );
 };
 
@@ -153,10 +159,10 @@ const styles = StyleSheet.create({
   btn: { width: "100%", borderRadius: 30 },
   btnParent: { width: "92%", alignSelf: "center", alignItems: "center" },
   container: {
-    flex: 1,
-    justifyContent: "space-between",
+    flexGrow: 1,
+    justifyContent: "space-around",
     width: "100%",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    paddingTop: Platform.OS === "android" ? 20 : 0,
   },
   form: {
     width: "92%",

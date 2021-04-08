@@ -4,7 +4,8 @@ import {
   Image,
   StyleSheet,
   TextInput,
-  Keyboard,
+  ScrollView,
+  KeyboardAvoidingView,
   Alert,
   Platform,
   StatusBar,
@@ -74,65 +75,70 @@ function Signin({ onSignin, loading }) {
   //   }
   // };
   return (
-    <View style={styles.container}>
-      <View style={styles.logoBox}>
-        <Image
-          resizeMode='cover'
-          source={require("../assets/app/logo.png")}
-          style={styles.logo}
-        />
-      </View>
-      <View style={styles.welcome}>
-        <Text style={styles.welcomeText}>Welcome back,</Text>
-        <Text>Log into your account to continue</Text>
-      </View>
-      <View style={styles.form}>
-        <View style={styles.innerForm}>
-          <TextInput
-            underlineColorAndroid='rgba(0,0,0,0)'
-            placeholder='Email or Phone'
-            style={styles.input}
-            autoCompleteType='email'
-            autoCapitalize='none'
-            value={userData.userEmail}
-            onChangeText={(userEmail) =>
-              setUserData({ ...userData, userEmail })
-            }
-          />
-          <TextInput
-            underlineColorAndroid='rgba(0,0,0,0)'
-            placeholder='Password'
-            style={styles.input}
-            secureTextEntry={true}
-            autoCapitalize='none'
-            value={userData.userPassword}
-            onChangeText={(userPassword) =>
-              setUserData({ ...userData, userPassword })
-            }
-          />
-        </View>
-      </View>
-      <View style={styles.btnParent}>
-        <Button style={styles.btn} onPress={() => onSignin(userData)}>
-          {!loading ? "Log in" : <Spinner status='basic' size='small' />}
-        </Button>
-        <Text>
-          Don't have an account?{" "}
-          <Text
-            status='primary'
-            style={styles.span}
-            onPress={() => navigation.navigate("Signup")}
-          >
-            Sign up
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps='handled'
+    >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior='padding'>
+        <View style={styles.container}>
+          <View style={styles.logoBox}>
+            <Image
+              resizeMode='cover'
+              source={require("../assets/app/logo.png")}
+              style={styles.logo}
+            />
+          </View>
+          <View style={styles.welcome}>
+            <Text style={styles.welcomeText}>Welcome back,</Text>
+            <Text>Log into your account to continue</Text>
+          </View>
+          <View style={styles.form}>
+            <View style={styles.innerForm}>
+              <TextInput
+                underlineColorAndroid='rgba(0,0,0,0)'
+                placeholder='Email or Phone'
+                style={styles.input}
+                autoCompleteType='email'
+                autoCapitalize='none'
+                value={userData.userEmail}
+                onChangeText={(userEmail) =>
+                  setUserData({ ...userData, userEmail })
+                }
+              />
+              <TextInput
+                underlineColorAndroid='rgba(0,0,0,0)'
+                placeholder='Password'
+                style={styles.input}
+                secureTextEntry={true}
+                autoCapitalize='none'
+                value={userData.userPassword}
+                onChangeText={(userPassword) =>
+                  setUserData({ ...userData, userPassword })
+                }
+              />
+            </View>
+          </View>
+          <View style={styles.btnParent}>
+            <Button style={styles.btn} onPress={() => onSignin(userData)}>
+              {!loading ? "Log in" : <Spinner status='basic' size='small' />}
+            </Button>
+            <Text>
+              Don't have an account?{" "}
+              <Text
+                status='primary'
+                style={styles.span}
+                onPress={() => navigation.navigate("Signup")}
+              >
+                Sign up
+              </Text>
+            </Text>
+          </View>
+          <Text appearance='hint' style={styles.footer}>
+            All rights reserved &copy; 2021 Fasha
           </Text>
-        </Text>
-      </View>
-      <View>
-        <Text appearance='hint' style={styles.footer}>
-          All rights reserved &copy; 2021 Fasha
-        </Text>
-      </View>
-    </View>
+        </View>
+      </KeyboardAvoidingView>
+    </ScrollView>
   );
 }
 
@@ -140,7 +146,7 @@ const styles = StyleSheet.create({
   btn: { width: "100%", borderRadius: 30 },
   btnParent: { width: "92%", alignSelf: "center", alignItems: "center" },
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "space-between",
     width: "100%",
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,

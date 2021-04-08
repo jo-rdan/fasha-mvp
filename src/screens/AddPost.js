@@ -16,6 +16,8 @@ import {
   useNavigation,
   useRoute,
 } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
+
 import * as ImagePicker from "expo-image-picker";
 import * as Permissions from "expo-permissions";
 import { API_URL, CLOUDINARY_API, FASHA_KEY } from "dotenv";
@@ -148,12 +150,39 @@ const AddPost = (props) => {
       );
       setIsCreating(false);
       if (res.status === 201) {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: res.data.message,
+          autoHide: true,
+          visibilityTime: 2000,
+          position: "bottom",
+        });
         setChangeColor(true);
         onHide();
         return;
       }
     } catch (error) {
-      console.log("error", error);
+      if (error.response.status === 404)
+        return Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: response.data.message,
+          position: "bottom",
+        });
+      if (error.response.status === 500)
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Something went wrong, try again later",
+          position: "top",
+        });
+      return Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+        position: "top",
+      });
     }
   };
 

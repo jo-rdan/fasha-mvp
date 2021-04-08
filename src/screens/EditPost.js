@@ -11,6 +11,8 @@ import {
   Modal,
   Text,
 } from "@ui-kitten/components";
+import Toast from "react-native-toast-message";
+
 import {
   useIsFocused,
   useNavigation,
@@ -45,9 +47,7 @@ const EditPost = (props) => {
   const [clearImage, setClearImage] = useState(false);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    console.log("hhahaha", newPost);
-  }, []);
+  useEffect(() => {}, []);
 
   // const MusicIcon = (props) => (
   //   <Icon
@@ -151,14 +151,51 @@ const EditPost = (props) => {
         { headers: { token } }
       );
       setIsCreating(false);
-      console.log("res", res.data.data);
       if (res.status === 200) {
-        setChangeColor(true);
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: res.data.message,
+          position: "bottom",
+        });
         onHide();
         return;
       }
     } catch (error) {
-      console.log("error", error.response);
+      setLoading(false);
+      if (error && error.response.status === 403) {
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.response.data.message,
+          position: "top",
+        });
+      }
+      if (error && error.response.status === 403) {
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.response.data.message,
+          position: "top",
+        });
+      }
+
+      if (error && error.response.status === 500) {
+        console.log(loading);
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Something went wrong, try again later",
+          position: "top",
+        });
+      }
+
+      return Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+        position: "top",
+      });
     }
   };
 

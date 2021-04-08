@@ -1,6 +1,7 @@
 // import { StatusBar } from "expo-status-bar";
 import "react-native-gesture-handler";
 import React, { useEffect, useState } from "react";
+import Toast from "react-native-toast-message";
 import {
   StyleSheet,
   View,
@@ -38,6 +39,7 @@ import Comments from "./src/screens/Post.js";
 import Post from "./src/screens/Post.js";
 import EditComment from "./src/screens/shared/EditComment.js";
 import EditPost from "./src/screens/EditPost.js";
+
 const Stack = createStackNavigator();
 
 export function App({ loading }) {
@@ -103,11 +105,12 @@ export default () => {
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) {
-        return Alert.alert(
-          "Sign in",
-          "You need to sign in to perform this action"
-          // [{ text: `Sign in`, onPress: () => navigation.navigate("Signin") }]
-        );
+        return Toast.show({
+          type: "error",
+          text1: "Authentication failed!",
+          text2: "You need to sign in to perform this action",
+          position: "top",
+        });
       }
       setLoading(true);
       const response = await axios.delete(`${API_URL}/users/user/delete`, {
@@ -122,15 +125,27 @@ export default () => {
       }
     } catch (error) {
       if (error.response && error.response.status === 401)
-        return Alert.alert(
-          "Authentication failed!",
-          "You need to sign in to perform this action",
-          [{ text: `Sign in`, onPress: () => setIsAuth(false) }]
-        );
+        return Toast.show({
+          type: "error",
+          text1: "Authentication failed!",
+          text2: "You need to sign in to perform this action",
+          visibilityTime: 2000,
+          position: "top",
+        });
       if (error.response && error.response.status === 404)
-        return Alert.alert("User not found!", error.response.data.error, [
-          { text: `Ok`, onPress: () => setIsAuth(false) },
-        ]);
+        return Toast.show({
+          type: "error",
+          text1: "User not found!",
+          text2: error.response.data.error,
+          visibilityTime: 2000,
+          position: "top",
+        });
+      return Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+        position: "top",
+      });
     }
   };
 
@@ -139,19 +154,31 @@ export default () => {
       const { userEmail, userPassword } = userData;
       const isValid = validateEmail(userEmail);
 
-      if (!isValid)
-        return Alert.alert(
-          "Invalid email",
-          "Please make sure your email is valid",
-          [{ text: "OK", onPress: () => console.log("Thank you!") }]
-        );
+      if (!isValid) {
+        return Toast.show({
+          type: "error",
+          text1: "Invalid Email",
+          text2: "Please make sure your email is valid",
+          autoHide: true,
+          visibilityTime: 2000,
+          position: "top",
+        });
+      }
+      // return Alert.alert(
+      //   "Invalid email",
+      //   "Please make sure your email is valid",
+      //   [{ text: "OK", onPress: () => console.log("Thank you!") }]
+      // );
 
       if (!isMatch)
-        return Alert.alert(
-          "Password mismatch!",
-          "Make sure both passwords match",
-          [{ text: "OK", onPress: () => console.log("Thank you!") }]
-        );
+        return Toast.show({
+          type: "error",
+          text1: "Password mismatch!",
+          text2: "Make sure both passwords match",
+          visibilityTime: 2000,
+          position: "top",
+        });
+
       setLoading(true);
       Keyboard.dismiss();
       const response = await axios.post(`${API_URL}/users/signup`, {
@@ -169,13 +196,20 @@ export default () => {
     } catch (error) {
       setLoading(false);
       if (error.response && error.response.status === 409)
-        return Alert.alert("User already exists", error.response.data.error, [
-          {
-            text: "Yes, sign me in",
-            onPress: () => console.log("thanks"),
-          },
-        ]);
-      return error;
+        return Toast.show({
+          type: "error",
+          text1: "User already exists",
+          text2: error.response.data.error,
+          visibilityTime: 2000,
+          position: "top",
+        });
+
+      return Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+        position: "top",
+      });
     }
   };
 
@@ -183,15 +217,15 @@ export default () => {
     try {
       const { fullNames, username } = userProfile;
       if (!fullNames || !username)
-        return Alert.alert(
-          "Empty fields",
-          "Please make sure you fill all fields",
-          [{ text: "OK", onPress: () => console.log("Thank you!") }]
-        );
+        return Toast.show({
+          type: "error",
+          position: "top",
+          text1: "Empty fields",
+          text2: "Please make sure you fill all fields",
+        });
 
       setLoading(true);
       Keyboard.dismiss();
-      console.log("ressssssssssss", route.params);
       const response = await axios.patch(
         `${API_URL}/users/edit-profile?email=${route.params.email}`,
         {
@@ -207,21 +241,20 @@ export default () => {
         return;
       }
     } catch (error) {
-      console.log("errrrrrrrrrrr", error);
-
       setLoading(false);
       if (error.response && error.response.status === 404)
-        return Alert.alert(
-          "User not found",
-          `User with email ${route.params.email} does not exist`,
-          [
-            {
-              text: "Sign up",
-              onPress: () => navigation.navigate("Signup"),
-            },
-          ]
-        );
-      return error;
+        return Toast.show({
+          type: "error",
+          position: "top",
+          text1: "User not found",
+          text2: `User with email ${route.params.email} does not exist`,
+        });
+      return Toast.show({
+        type: "error",
+        position: "top",
+        text1: "Error",
+        text2: error.message,
+      });
     }
   };
 
@@ -231,18 +264,20 @@ export default () => {
       const isValid = validateEmail(userEmail);
 
       if (!isValid)
-        return Alert.alert(
-          "Invalid email",
-          "Please make sure your email is valid",
-          [{ text: "OK", onPress: () => console.log("Thank you!") }]
-        );
+        return Toast.show({
+          type: "error",
+          position: "top",
+          text1: "Invalid email",
+          text2: "Please make sure your email is valid",
+        });
 
       if (!userPassword)
-        return Alert.alert(
-          "Missing password",
-          "Please make sure you input your password",
-          [{ text: "OK", onPress: () => console.log("Thank you!") }]
-        );
+        return Toast.show({
+          type: "error",
+          position: "top",
+          text1: "Missing password",
+          text2: "Please make sure you input your password",
+        });
       setLoading(true);
       Keyboard.dismiss();
       const response = await axios.post(`${API_URL}/users/signin`, {
@@ -258,20 +293,19 @@ export default () => {
     } catch (error) {
       setLoading(false);
       if (error.response && error.response.status === 404)
-        return Alert.alert("User not found", error.response.data.error, [
-          {
-            text: "sign me up",
-            onPress: () => console.log("thanks"),
-          },
-        ]);
+        return Toast.show({
+          type: "error",
+          position: "top",
+          text1: "User not found",
+          text2: `User with email ${route.params.email} does not exist`,
+        });
       if (error.response && error.response.status === 401) {
-        // setUserData({ ...userData, userPassword: "" });
-        return Alert.alert("Incorrect credentials", error.response.data.error, [
-          {
-            text: "Try again",
-            onPress: () => console.log("here"),
-          },
-        ]);
+        return Toast.show({
+          type: "error",
+          position: "top",
+          text1: "Incorrect credentials",
+          text2: error.response.data.error,
+        });
       }
     }
   };
@@ -358,6 +392,7 @@ export default () => {
               </>
             )}
           </Stack.Navigator>
+          <Toast ref={(ref) => Toast.setRef(ref)} />
         </NavigationContainer>
       </ApplicationProvider>
     </>

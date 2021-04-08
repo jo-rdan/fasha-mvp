@@ -29,6 +29,8 @@ import {
   Divider,
   Button,
 } from "@ui-kitten/components";
+import Toast from "react-native-toast-message";
+
 import BottomSheet from "react-native-simple-bottom-sheet";
 import { Icon as Icons } from "react-native-eva-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -189,28 +191,42 @@ const Post = (props) => {
       const response = await axios.delete(`${API_URL}/posts/${post.uuid}`, {
         headers: { token },
       });
-      console.log("asanre", post.uuid, response.data.data);
       if (response.status === 200) {
         setLoading(false);
-        return Alert.alert("Success", response.data.message, [
-          {
-            text: "OK",
-            onPress: () => navigation.goBack(),
-          },
-        ]);
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: response.data.message,
+          position: "bottom",
+        });
+        return navigation.goBack();
       }
       setLoading(false);
       return;
     } catch (error) {
-      console.log(error.response, ";;;;");
-      if (error.response.status === 403)
-        return Alert.alert("Error", error.response.data.message, [
-          {
-            text: "OK",
-            onPress: () => setIsDeleted(false),
-          },
-        ]);
-      return error.response.data;
+      setLoading(false);
+      if (error.response.status === 403) {
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.response.data.message,
+          position: "top",
+        });
+      }
+      if (error.response.status === 500) {
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Something went wrong, try again later",
+          position: "top",
+        });
+      }
+      return Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+        position: "top",
+      });
     }
   };
 
@@ -226,27 +242,39 @@ const Post = (props) => {
       if (response.status === 200) {
         setLoading(false);
         setIsDeleted(true);
-        return Alert.alert("Success", response.data.message, [
-          {
-            text: "OK",
-            onPress: () => {
-              setClearText(false);
-              setIsDeleted(false);
-            },
-          },
-        ]);
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: response.data.message,
+          position: "bottom",
+        });
+        setIsDeleted(false);
+        return;
       }
       setLoading(false);
       return;
     } catch (error) {
+      setLoading(false);
       if (error.response.status === 403)
-        return Alert.alert("Error", error.response.data.error, [
-          {
-            text: "OK",
-            onPress: () => setIsDeleted(false),
-          },
-        ]);
-      return error.response.data;
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.response.data.message,
+          position: "top",
+        });
+      if (error.response.status === 500)
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Something went wrong, try again later",
+          position: "top",
+        });
+      return Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+        position: "top",
+      });
     }
   };
 

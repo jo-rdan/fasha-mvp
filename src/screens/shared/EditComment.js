@@ -9,6 +9,8 @@ import {
   Modal,
   Spinner,
 } from "@ui-kitten/components";
+import Toast from "react-native-toast-message";
+
 import {
   useIsFocused,
   useNavigation,
@@ -50,6 +52,12 @@ const EditComment = () => {
       setIsCreating(false);
       console.log(response.data.data);
       if (response.status === 200) {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: response.data.message,
+          position: "bottom",
+        });
         return navigation.goBack();
       }
     } catch (error) {
