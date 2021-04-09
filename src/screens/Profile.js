@@ -27,6 +27,8 @@ import {
   Divider,
 } from "@ui-kitten/components";
 import BottomSheet from "react-native-simple-bottom-sheet";
+import Toast from "react-native-toast-message";
+
 import { Icon as Icons } from "react-native-eva-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -75,7 +77,6 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
 
   useEffect(() => {
     const fetchToken = async () => {
-      console.log("doooooo");
       try {
         if (!isFocused) return;
         const token = await AsyncStorage.getItem("token");
@@ -87,7 +88,28 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
         setUser(response.data.data);
         return;
       } catch (error) {
-        console.log("<====1", error.response.data);
+        setLoading(false);
+        if (error.response.status === 404)
+          return Toast.show({
+            type: "error",
+            text1: "Not found",
+            text2: error.response.data.error,
+            position: "top",
+          });
+        if (error.response.status === 500)
+          return Toast.show({
+            type: "error",
+            text1: "Error",
+            text2: "Something went wrong, try again later",
+            position: "top",
+          });
+
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message,
+          position: "top",
+        });
       }
     };
     fetchToken();
@@ -145,30 +167,52 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
     try {
       const token = await AsyncStorage.getItem("token");
       setLoading(true);
-      const response = await axios.delete(`${API_URL}/posts/${postId}`, {
-        headers: { token },
-      });
+      const response = await axios.delete(
+        `${API_URL}/posts/${selectedPost.uuid}`,
+        {
+          headers: { token },
+        }
+      );
       if (response.status === 200) {
         setLoading(false);
         setIsDeleted(true);
-        return Alert.alert("Success", response.data.message, [
-          {
-            text: "OK",
-            onPress: () => setIsDeleted(false),
-          },
-        ]);
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: response.data.message,
+          position: "bottom",
+        });
+        setIsDeleted(false);
+        return;
       }
       setLoading(false);
       return;
     } catch (error) {
-      if (error.response.status === 403)
-        return Alert.alert("Error", error.response.data.message, [
-          {
-            text: "OK",
-            onPress: () => setIsDeleted(false),
-          },
-        ]);
-      return error.response.data;
+      setLoading(false);
+      if (error && error.response.status === 403) {
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.response.data.message,
+          position: "top",
+        });
+      }
+      if (error && error.response.status === 500) {
+        console.log(loading);
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Something went wrong, try again later",
+          position: "top",
+        });
+      }
+
+      return Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+        position: "top",
+      });
     }
   };
 
@@ -365,7 +409,6 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
                         fill='#8f9bb3'
                         height={18}
                         onPress={() => {
-                          postId = post.uuid;
                           setSelectedPost(post);
                           panelRef.current.togglePanel();
                         }}

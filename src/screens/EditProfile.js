@@ -25,6 +25,8 @@ import {
   Button,
   IndexPath,
 } from "@ui-kitten/components";
+import Toast from "react-native-toast-message";
+
 import * as ImagePicker from "expo-image-picker";
 import * as Permissions from "expo-permissions";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -137,11 +139,45 @@ const EditProfile = (props) => {
       );
       setIsUpdating(false);
       if (response.status === 200)
-        return Alert.alert("Success", response.data.message, [
-          { text: "OK", onPress: () => null },
-        ]);
+        return Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: response.data.message,
+          visibilityTime: 2000,
+          autoHide: true,
+          position: "bottom",
+        });
     } catch (error) {
-      return error;
+      setLoading(false);
+      if (error.response.status === 403)
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.response.error,
+          position: "top",
+        });
+
+      if (error.response.status === 404)
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.response.error,
+          position: "top",
+        });
+
+      if (error.response.status === 500)
+        return Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Something went wrong, try again later",
+          position: "top",
+        });
+      return Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+        position: "top",
+      });
     }
   };
 

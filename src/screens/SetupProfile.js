@@ -5,7 +5,7 @@ import {
   Image,
   StyleSheet,
   TextInput,
-  Keyboard,
+  KeyboardAvoidingView,
   Alert,
   Platform,
   StatusBar,
@@ -24,51 +24,65 @@ export default SetupProfile = ({ onSetup, loading }) => {
   const route = useRoute();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.logoBox}>
-        <Image
-          resizeMode='cover'
-          source={require("../assets/app/logo.png")}
-          style={styles.logo}
-        />
-      </View>
-      <View style={styles.welcome}>
-        <Text style={styles.welcomeText}>Almost there,</Text>
-        <Text>Setup a basic profile, you can edit later</Text>
-      </View>
-      <View style={styles.form}>
-        <View style={styles.innerForm}>
-          <TextInput
-            underlineColorAndroid='rgba(0,0,0,0)'
-            placeholder='Full Names'
-            style={styles.input}
-            value={userProfile.fullNames}
-            onChangeText={(fullNames) =>
-              setUserProfile({ ...userProfile, fullNames })
-            }
-          />
-          <TextInput
-            underlineColorAndroid='rgba(0,0,0,0)'
-            placeholder='Choose your username'
-            style={styles.input}
-            value={userProfile.username}
-            onChangeText={(username) =>
-              setUserProfile({ ...userProfile, username })
-            }
-          />
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps='handled'
+    >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior='padding'>
+        <View style={styles.container}>
+          <View style={styles.logoBox}>
+            <Image
+              resizeMode='cover'
+              source={require("../assets/app/logo.png")}
+              style={styles.logo}
+            />
+          </View>
+          <View style={styles.welcome}>
+            <Text style={styles.welcomeText}>Almost there,</Text>
+            <Text>Setup a basic profile, you can edit later</Text>
+          </View>
+          <View style={styles.form}>
+            <View style={styles.innerForm}>
+              <TextInput
+                underlineColorAndroid='rgba(0,0,0,0)'
+                placeholder='Full Names'
+                style={styles.input}
+                value={userProfile.fullNames}
+                onChangeText={(fullNames) =>
+                  setUserProfile({ ...userProfile, fullNames })
+                }
+              />
+              <TextInput
+                underlineColorAndroid='rgba(0,0,0,0)'
+                placeholder='Choose your username'
+                style={styles.input}
+                value={userProfile.username}
+                onChangeText={(username) =>
+                  setUserProfile({ ...userProfile, username })
+                }
+              />
+            </View>
+          </View>
+          <View style={styles.btnParent}>
+            <Button
+              style={styles.btn}
+              onPress={() => onSetup(userProfile, route)}
+            >
+              {!loading ? (
+                "Finish setup"
+              ) : (
+                <Spinner status='basic' size='small' />
+              )}
+            </Button>
+          </View>
+          <View>
+            <Text appearance='hint' style={styles.footer}>
+              All rights reserved &copy; 2021 Fasha
+            </Text>
+          </View>
         </View>
-      </View>
-      <View style={styles.btnParent}>
-        <Button style={styles.btn} onPress={() => onSetup(userProfile, route)}>
-          {!loading ? "Finish setup" : <Spinner status='basic' size='small' />}
-        </Button>
-      </View>
-      <View>
-        <Text appearance='hint' style={styles.footer}>
-          All rights reserved &copy; 2021 Fasha
-        </Text>
-      </View>
-    </View>
+      </KeyboardAvoidingView>
+    </ScrollView>
   );
 };
 
@@ -76,7 +90,7 @@ const styles = StyleSheet.create({
   btn: { width: "100%", borderRadius: 30 },
   btnParent: { width: "92%", alignSelf: "center", alignItems: "center" },
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "space-between",
     width: "100%",
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
