@@ -51,13 +51,12 @@ const Post = (props) => {
   const [visible, setVisible] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [comment, setComment] = useState("");
-  const [clearText, setClearText] = useState(false);
+  const [user, setUser] = useState({});
   const [newComment, setNewComment] = useState(false);
   const [post, setPost] = useState({});
   const [loading, setLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [changeData, setChangeData] = useState({ data: "", change: false });
-  const [isRef, setRef] = useState(null);
   const [disable, setDisable] = useState(true);
   const [isDeleted, setIsDeleted] = useState(false);
   const navigation = useNavigation();
@@ -95,7 +94,9 @@ const Post = (props) => {
     const fetchToken = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
-        setLoading(false);
+        const isUser = jwt.decode(token, FASHA_KEY);
+        setUser(isUser);
+        setLoading(true);
         const response = await axios.get(
           `${API_URL}/posts/${route.params.uuid}`,
           {
@@ -299,9 +300,13 @@ const Post = (props) => {
           <>
             <Card style={styles.posts} key={post.uuid} disabled>
               <View style={styles.postContainer}>
-                <View style={styles.postAvatar}>
-                  <Avatar size='medium' source={{ uri: post.user.image }} />
-                </View>
+                {post.user.image ? (
+                  <View style={styles.postAvatar}>
+                    <Avatar size='medium' source={{ uri: post.user.image }} />
+                  </View>
+                ) : (
+                  <View></View>
+                )}
                 <View style={styles.postUser}>
                   <View style={styles.postHeader}>
                     <Text style={styles.numbers}>{post.user.fullnames}</Text>
@@ -346,17 +351,21 @@ const Post = (props) => {
                   />
                 </View>
                 <Text appearance='hint'>{post.comments.length}</Text>
-                <View style={{ width: "20%" }}>
-                  <Icons
-                    name='more-horizontal-outline'
-                    fill='#8f9bb3'
-                    height={18}
-                    onPress={() => {
-                      setChangeData(false);
-                      panelRef.current.togglePanel();
-                    }}
-                  />
-                </View>
+                {post && post.user.uuid === user.uuid ? (
+                  <View style={{ width: "20%" }}>
+                    <Icon
+                      name='more-horizontal-outline'
+                      fill='#8f9bb3'
+                      height={18}
+                      onPress={() => {
+                        setChangeData(false);
+                        panelRef.current.togglePanel();
+                      }}
+                    />
+                  </View>
+                ) : (
+                  <View></View>
+                )}
               </View>
             </Card>
 
