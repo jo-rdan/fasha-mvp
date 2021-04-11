@@ -39,6 +39,7 @@ import Comments from "./src/screens/Post.js";
 import Post from "./src/screens/Post.js";
 import EditComment from "./src/screens/shared/EditComment.js";
 import EditPost from "./src/screens/EditPost.js";
+import Homepage from "./src/screens/Homepage.js";
 
 const Stack = createStackNavigator();
 
@@ -317,6 +318,11 @@ export default () => {
           <Stack.Navigator>
             {isAuth ? (
               <>
+                <Stack.Screen
+                  name='Home'
+                  component={Homepage}
+                  options={{ headerShown: false }}
+                />
                 <Stack.Screen name='Profile' options={{ headerShown: false }}>
                   {(props) => (
                     <Profile

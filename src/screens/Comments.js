@@ -21,6 +21,7 @@ import {
   Divider,
 } from "@ui-kitten/components";
 import Toast from "react-native-toast-message";
+import jwt from "expo-jwt";
 import BottomSheet from "react-native-simple-bottom-sheet";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -33,6 +34,7 @@ const Comments = React.forwardRef(
   ) => {
     const [loading, setLoading] = useState(false);
     const [comments, setComments] = useState([]);
+    const [loggedUser, setLoggedUser] = useState({});
     const [disable, setDisable] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
     const panelRef = useRef(null);
@@ -43,6 +45,8 @@ const Comments = React.forwardRef(
       const fetchToken = async () => {
         try {
           const token = await AsyncStorage.getItem("token");
+          const isUser = jwt.decode(token, FASHA_KEY);
+          setLoggedUser(isUser);
           setLoading(true);
           const response = await axios.get(
             `${API_URL}/comments/post/${postId}`,
@@ -57,6 +61,7 @@ const Comments = React.forwardRef(
             return;
           }
         } catch (error) {
+          console.log(error);
           setLoading(false);
           if (error.response.status === 404)
             return Toast.show({
@@ -81,7 +86,6 @@ const Comments = React.forwardRef(
           });
         }
       };
-      console.log(newComment, "=======");
       fetchToken();
 
       return () => setNewComment(false);
@@ -186,23 +190,27 @@ const Comments = React.forwardRef(
                           </Text>
                         </View>
                       </TouchableHighlight>
-                      <View style={{ width: "20%" }}>
-                        <Icon
-                          name='more-horizontal-outline'
-                          fill='#8f9bb3'
-                          height={18}
-                          onPress={() => {
-                            setChangeData({
-                              data: {
-                                commentId: comment.commentId,
-                                comment: comment.comment,
-                              },
-                              change: true,
-                            });
-                            ref.current.togglePanel();
-                          }}
-                        />
-                      </View>
+                      {comment && comment.user.uuid === loggedUser.uuid ? (
+                        <View style={{ width: "20%" }}>
+                          <Icon
+                            name='more-horizontal-outline'
+                            fill='#8f9bb3'
+                            height={18}
+                            onPress={() => {
+                              setChangeData({
+                                data: {
+                                  commentId: comment.commentId,
+                                  comment: comment.comment,
+                                },
+                                change: true,
+                              });
+                              ref.current.togglePanel();
+                            }}
+                          />
+                        </View>
+                      ) : (
+                        <View></View>
+                      )}
                     </View>
                   </Card>
                 );
