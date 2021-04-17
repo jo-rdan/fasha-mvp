@@ -23,6 +23,7 @@ import * as Permissions from "expo-permissions";
 import { API_URL, CLOUDINARY_API, FASHA_KEY } from "dotenv";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import connectSocket from "../helpers/socketConnection";
 
 const CloseIcon = (props) => (
   <Icon fill='grey' width={30} height={30} {...props} name='close-outline' />
@@ -36,7 +37,7 @@ const GalleryIcon = (props) => (
   <Icon fill='grey' width={20} height={20} {...props} name='image-outline' />
 );
 
-const AddPost = (props) => {
+const AddPost = ({ visible, setVisible, image }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [changeColor, setChangeColor] = useState(false);
   const [post, setPost] = useState({
@@ -45,12 +46,21 @@ const AddPost = (props) => {
   });
   const [loading, setLoading] = useState(false);
   const [disable, setDisable] = useState(true);
+  const [socket, setSocket] = useState();
   const navigation = useNavigation();
   const route = useRoute();
 
-  const { image } = route.params;
+  // const { image } = route.params;
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    console.log(disable);
+    const fetchToken = async () => {
+      const token = await AsyncStorage.getItem("token");
+      const socketCon = connectSocket(token);
+      setSocket(socketCon);
+    };
+    fetchToken();
+  }, []);
 
   // const MusicIcon = (props) => (
   //   <Icon
@@ -75,7 +85,9 @@ const AddPost = (props) => {
     );
 
   const onHide = () => {
-    return navigation.goBack();
+    setDisable(true);
+    setPost({ postCaption: "", postImage: "" });
+    return setVisible(false);
   };
 
   const askForPermission = async () => {
@@ -138,31 +150,13 @@ const AddPost = (props) => {
     Keyboard.dismiss();
     try {
       const { postCaption, postImage } = post;
-      const token = await AsyncStorage.getItem("token");
       setIsCreating(true);
-      const res = await axios.post(
-        `${API_URL}/posts/create`,
-        {
-          postCaption,
-          postMedia: postImage,
-        },
-        { headers: { token } }
-      );
+      socket.emit("new post", { postCaption, postMedia: postImage });
       setIsCreating(false);
-      if (res.status === 201) {
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: res.data.message,
-          autoHide: true,
-          visibilityTime: 2000,
-          position: "bottom",
-        });
-        setChangeColor(true);
-        onHide();
-        return;
-      }
+      onHide();
     } catch (error) {
+      setIsCreating(false);
+      console.log(error);
       if (error.response.status === 404)
         return Toast.show({
           type: "success",
@@ -189,7 +183,7 @@ const AddPost = (props) => {
   return (
     <Layout style={styles.container}>
       <Modal
-        visible={true}
+        visible={visible}
         backdropStyle={styles.backdrop}
         onBackdropPress={onHide}
         style={styles.modal}

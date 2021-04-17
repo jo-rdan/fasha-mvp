@@ -60,7 +60,7 @@ export function App({ loading }) {
           <Button
             appearance='ghost'
             onPress={() => {
-              navigation.navigate("Signin");
+              navigation.navigate("SetupProfile");
             }}
           >
             Continue
@@ -318,11 +318,11 @@ export default () => {
           <Stack.Navigator>
             {isAuth ? (
               <>
-                <Stack.Screen
+                {/* <Stack.Screen
                   name='Home'
                   component={Homepage}
                   options={{ headerShown: false }}
-                />
+                /> */}
                 <Stack.Screen name='Profile' options={{ headerShown: false }}>
                   {(props) => (
                     <Profile
@@ -365,7 +365,7 @@ export default () => {
                 <Stack.Screen name='App' options={{ headerShown: false }}>
                   {(props) => <App {...props} loading={isLoading} />}
                 </Stack.Screen>
-                <Stack.Screen name='Signin' options={{ headerShown: false }}>
+                {/* <Stack.Screen name='Signin' options={{ headerShown: false }}>
                   {(props) => (
                     <Signin
                       {...props}
@@ -382,7 +382,7 @@ export default () => {
                       loading={loading}
                     />
                   )}
-                </Stack.Screen>
+                </Stack.Screen> */}
                 <Stack.Screen
                   name='SetupProfile'
                   options={{ headerShown: false }}

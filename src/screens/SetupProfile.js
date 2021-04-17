@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   ScrollView,
   View,
@@ -10,7 +10,14 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
-import { Button, Text, Spinner } from "@ui-kitten/components";
+import {
+  Button,
+  Text,
+  Spinner,
+  Select,
+  SelectItem,
+  IndexPath,
+} from "@ui-kitten/components";
 import axios from "axios";
 import { API_URL } from "dotenv";
 import { validateEmail } from "../helpers/emailValidation";
@@ -21,7 +28,18 @@ export default SetupProfile = ({ onSetup, loading }) => {
     fullNames: "",
     username: "",
   });
+  const [selectedIndex, setSelectedIndex] = useState(new IndexPath(0));
+  const [tags, setTags] = useState([]);
   const route = useRoute();
+  const selectRef = useRef(null);
+
+  useEffect(() => {
+    const getTags = async () => {
+      const response = await axios.get("http://192.168.43.96:5000/api/v1/tags");
+      setTags(response.data.data);
+    };
+    getTags();
+  }, []);
 
   return (
     <ScrollView
@@ -61,6 +79,25 @@ export default SetupProfile = ({ onSetup, loading }) => {
                   setUserProfile({ ...userProfile, username })
                 }
               />
+              <Select
+                placeholder='Select tag'
+                value={tags?.length > 0 ? tags[selectedIndex.row].tagName : ""}
+                selectedIndex={selectedIndex}
+                onSelect={(index) => {
+                  setSelectedIndex(index);
+                }}
+                style={styles.inputSelect}
+              >
+                {tags && tags.length > 0
+                  ? tags.map((tag) => (
+                      <SelectItem
+                        title={tag.tagName}
+                        key={tag.tagId}
+                        ref={selectRef}
+                      />
+                    ))
+                  : null}
+              </Select>
             </View>
           </View>
           <View style={styles.btnParent}>
@@ -112,6 +149,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F6F6",
     padding: 10,
     margin: 5,
+    width: "90%",
+  },
+  inputSelect: {
+    // borderRadius: 10,
+    // backgroundColor: "#F6F6F6",
+    // padding: 10,
+    // margin: 5,
     width: "90%",
   },
   logoBox: {

@@ -35,6 +35,8 @@ import { FASHA_KEY, API_URL } from "dotenv";
 import jwt from "expo-jwt";
 import axios from "axios";
 import { ScrollView } from "react-native-gesture-handler";
+import connectSocket from "../helpers/socketConnection";
+import AddPost from "./AddPost";
 
 const AddIcon = (props) => (
   <Icon
@@ -82,6 +84,7 @@ const Homepage = (props) => {
   const [user, setUser] = useState({});
   const [selectedPost, setSelectedPost] = useState({});
   const [isDeleted, setIsDeleted] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   const panelRef = useRef(null);
   const isFocused = useIsFocused();
@@ -90,6 +93,7 @@ const Homepage = (props) => {
       try {
         if (!isFocused) return;
         const token = await AsyncStorage.getItem("token");
+        const socket = connectSocket(token);
         const isUser = jwt.decode(token, FASHA_KEY);
         setUser(isUser);
         setLoading(true);
@@ -98,6 +102,36 @@ const Homepage = (props) => {
         });
         setLoading(false);
         setPosts(response.data.data);
+        socket.on("created-post", (data) => {
+          if (data.posts.length <= 0) return;
+          console.log(
+            "creator",
+            data.creator,
+            "\nuser",
+            isUser.uuid,
+            "\nthe fuck",
+            isUser.uuid === data.creator
+          );
+          setPosts(data.posts);
+          if (isUser.uuid === data.creator) {
+            return Toast.show({
+              type: "success",
+              text1: "Success",
+              text2: "Post created",
+              autoHide: true,
+              visibilityTime: 2000,
+              position: "top",
+            });
+          }
+          return Toast.show({
+            type: "success",
+            text1: "New Posts",
+            text2: "New Posts created",
+            autoHide: true,
+            visibilityTime: 2000,
+            position: "top",
+          });
+        });
         return;
       } catch (error) {
         setLoading(false);
@@ -126,7 +160,7 @@ const Homepage = (props) => {
       }
     };
     fetchToken();
-  }, [isFocused, isDeleted]);
+  }, [isDeleted]);
   const handleDate = (current, previous) => {
     const minutesUnit = 60 * 1000;
     const hoursUnit = minutesUnit * 60;
@@ -208,15 +242,18 @@ const Homepage = (props) => {
     <View style={{ width: "45%" }}>
       <TopNavigationAction
         icon={rightActions}
-        onPress={() =>
-          navigation.navigate("Add Post", { image: user && user.image })
-        }
+        onPress={() => setVisible(true)}
       />
     </View>
   );
 
   return (
     <>
+      <AddPost
+        visible={visible}
+        setVisible={setVisible}
+        image={user && user.image}
+      />
       <Layout style={styles.container}>
         <TopNavigation
           accessoryLeft={() => (
