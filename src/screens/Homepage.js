@@ -26,6 +26,7 @@ import {
   List,
   ListItem,
   Divider,
+  Tooltip,
 } from "@ui-kitten/components";
 
 import Toast from "react-native-toast-message";
@@ -58,7 +59,8 @@ const MessageIcon = (props) => (
   />
 );
 
-const rightActions = () => {
+const rightActions = (props) => {
+  const [tools, setTools] = useState(true);
   return (
     <View
       style={{
@@ -88,54 +90,56 @@ const Homepage = (props) => {
 
   const panelRef = useRef(null);
   const isFocused = useIsFocused();
+
   useEffect(() => {
     const fetchToken = async () => {
       try {
         if (!isFocused) return;
         const token = await AsyncStorage.getItem("token");
         const socket = connectSocket(token);
-        const isUser = jwt.decode(token, FASHA_KEY);
-        setUser(isUser);
         setLoading(true);
-        const response = await axios.get(`${API_URL}/posts/`, {
+
+        const isUser = await axios.get(`${API_URL}/users/user/profile`, {
           headers: { token },
         });
+        const { data } = isUser.data;
+        setUser(data);
+        const response = await axios.get(
+          `${API_URL}/posts/?tagName=${data?.tag.tagName}`,
+          {
+            headers: { token },
+          }
+        );
         setLoading(false);
         setPosts(response.data.data);
-        socket.on("created-post", (data) => {
-          if (data.posts.length <= 0) return;
-          console.log(
-            "creator",
-            data.creator,
-            "\nuser",
-            isUser.uuid,
-            "\nthe fuck",
-            isUser.uuid === data.creator
-          );
+        socket.emit("joining", { tag: data?.tag });
+        socket.on("created post", (data) => {
+          // if (data.posts.length <= 0) return;
           setPosts(data.posts);
-          if (isUser.uuid === data.creator) {
-            return Toast.show({
-              type: "success",
-              text1: "Success",
-              text2: "Post created",
-              autoHide: true,
-              visibilityTime: 2000,
-              position: "top",
-            });
-          }
+          // if (isUser?.data.data.uuid === data.creator) {
           return Toast.show({
             type: "success",
-            text1: "New Posts",
-            text2: "New Posts created",
+            text1: "Success",
+            text2: "Post created",
             autoHide: true,
             visibilityTime: 2000,
             position: "top",
           });
+          // }
+          // console.log("cops");
+          // return Toast.show({
+          //   type: "success",
+          //   text1: "New Posts",
+          //   text2: "New Posts created",
+          //   autoHide: true,
+          //   visibilityTime: 2000,
+          //   position: "top",
+          // });
         });
         return;
       } catch (error) {
         setLoading(false);
-        console.log(error);
+        console.log(error, "=< error");
         if (error && error.response.status === 404)
           return Toast.show({
             type: "error",
@@ -169,8 +173,10 @@ const Homepage = (props) => {
 
     var elapsed = current - previous;
 
-    if (elapsed < minutesUnit)
+    if (elapsed < minutesUnit) {
+      if (Math.round(elapsed / 1000) <= 3) return "now";
       return `${Math.round(elapsed / 1000)} seconds ago`;
+    }
     if (elapsed < hoursUnit)
       return `${Math.round(elapsed / minutesUnit)} minutes ago`;
     if (elapsed < daysUnit)
@@ -368,7 +374,17 @@ const Homepage = (props) => {
                   );
                 })
               ) : (
-                <Text></Text>
+                <View style={styles.newPost}>
+                  <Icon
+                    name='plus-circle-outline'
+                    onPress={() => setVisible(true)}
+                    fill='black'
+                    width={50}
+                    height={50}
+                  />
+
+                  <Text>Create New Post</Text>
+                </View>
               )}
             </Layout>
           </ScrollView>
@@ -475,6 +491,12 @@ const styles = StyleSheet.create({
     margin: 5,
     fontSize: 12,
     width: "100%",
+  },
+  newPost: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    height: 500,
   },
   noPost: {
     flex: 1,

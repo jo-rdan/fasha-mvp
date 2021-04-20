@@ -60,7 +60,7 @@ export function App({ loading }) {
           <Button
             appearance='ghost'
             onPress={() => {
-              navigation.navigate("SetupProfile");
+              navigation.navigate("Signin");
             }}
           >
             Continue
@@ -119,7 +119,6 @@ export default () => {
       });
       if (response.status === 200) {
         setLoading(false);
-        console.log("ride", response.data);
         await AsyncStorage.removeItem("token");
         return setIsAuth(false);
         // return navigation.navigate("Signup");
@@ -190,7 +189,6 @@ export default () => {
       if (response.status === 201) {
         setLoading(false);
         return navigation.navigate("SetupProfile", {
-          email: userEmail,
           token: response.data.data,
         });
       }
@@ -214,7 +212,8 @@ export default () => {
     }
   };
 
-  const handleSetupProfile = async (userProfile, route) => {
+  const handleSetupProfile = async (userProfile, tag, route) => {
+    console.log(tag, "taggie");
     try {
       const { fullNames, username } = userProfile;
       if (!fullNames || !username)
@@ -228,7 +227,7 @@ export default () => {
       setLoading(true);
       Keyboard.dismiss();
       const response = await axios.patch(
-        `${API_URL}/users/edit-profile?email=${route.params.email}`,
+        `${API_URL}/users/edit-profile?tag=${tag.tagId}`,
         {
           fullnames: fullNames,
           username,
@@ -288,17 +287,18 @@ export default () => {
       if (response.status === 200) {
         await AsyncStorage.setItem("token", response.data.data);
         setIsAuth(true);
-        return setLoading(false);
+        setLoading(false);
         // return navigation.navigate("Profile");
       }
     } catch (error) {
+      console.log(error);
       setLoading(false);
       if (error.response && error.response.status === 404)
         return Toast.show({
           type: "error",
           position: "top",
           text1: "User not found",
-          text2: `User with email ${route.params.email} does not exist`,
+          text2: `User does not exist`,
         });
       if (error.response && error.response.status === 401) {
         return Toast.show({
@@ -318,11 +318,11 @@ export default () => {
           <Stack.Navigator>
             {isAuth ? (
               <>
-                {/* <Stack.Screen
+                <Stack.Screen
                   name='Home'
                   component={Homepage}
                   options={{ headerShown: false }}
-                /> */}
+                />
                 <Stack.Screen name='Profile' options={{ headerShown: false }}>
                   {(props) => (
                     <Profile
@@ -365,7 +365,7 @@ export default () => {
                 <Stack.Screen name='App' options={{ headerShown: false }}>
                   {(props) => <App {...props} loading={isLoading} />}
                 </Stack.Screen>
-                {/* <Stack.Screen name='Signin' options={{ headerShown: false }}>
+                <Stack.Screen name='Signin' options={{ headerShown: false }}>
                   {(props) => (
                     <Signin
                       {...props}
@@ -382,7 +382,7 @@ export default () => {
                       loading={loading}
                     />
                   )}
-                </Stack.Screen> */}
+                </Stack.Screen>
                 <Stack.Screen
                   name='SetupProfile'
                   options={{ headerShown: false }}

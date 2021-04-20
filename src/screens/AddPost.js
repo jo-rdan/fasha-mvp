@@ -22,6 +22,8 @@ import * as ImagePicker from "expo-image-picker";
 import * as Permissions from "expo-permissions";
 import { API_URL, CLOUDINARY_API, FASHA_KEY } from "dotenv";
 import axios from "axios";
+import jwt from "expo-jwt";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import connectSocket from "../helpers/socketConnection";
 
@@ -149,9 +151,14 @@ const AddPost = ({ visible, setVisible, image }) => {
   const handleAddPost = async () => {
     Keyboard.dismiss();
     try {
+      const token = await AsyncStorage.getItem("token");
       const { postCaption, postImage } = post;
+      const user = jwt.decode(token, FASHA_KEY);
       setIsCreating(true);
-      socket.emit("new post", { postCaption, postMedia: postImage });
+      socket.emit("new post", {
+        post: { postCaption, postMedia: postImage },
+        user,
+      });
       setIsCreating(false);
       onHide();
     } catch (error) {
