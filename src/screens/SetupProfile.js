@@ -9,6 +9,7 @@ import {
   Alert,
   Platform,
   StatusBar,
+  Keyboard,
 } from "react-native";
 import {
   Button,
@@ -29,17 +30,28 @@ export default SetupProfile = ({ onSetup, loading }) => {
     username: "",
   });
   const [selectedIndex, setSelectedIndex] = useState(new IndexPath(0));
+  const [selectedTag, setSelected] = useState();
   const [tags, setTags] = useState([]);
   const route = useRoute();
   const selectRef = useRef(null);
-
+  const selectedTags = [];
   useEffect(() => {
     const getTags = async () => {
-      const response = await axios.get("http://192.168.43.96:5000/api/v1/tags");
-      setTags(response.data.data);
+      try {
+        const response = await axios.get(`${API_URL}/tags`);
+        // console.log(response.data.data, ".....");
+        setTags(response.data.data);
+      } catch (error) {
+        console.log(error.response.data);
+      }
     };
     getTags();
   }, []);
+
+  // const multipleTagsValues = selectedIndex.map((index) => {
+  //   selectedTags.push(tags?.length > 0 ? tags[index.row] : "");
+  //   return tags?.length > 0 ? tags[index.row].tagName : null;
+  // });
 
   return (
     <ScrollView
@@ -62,6 +74,7 @@ export default SetupProfile = ({ onSetup, loading }) => {
           <View style={styles.form}>
             <View style={styles.innerForm}>
               <TextInput
+                autoCapitalize='words'
                 underlineColorAndroid='rgba(0,0,0,0)'
                 placeholder='Full Names'
                 style={styles.input}
@@ -71,6 +84,7 @@ export default SetupProfile = ({ onSetup, loading }) => {
                 }
               />
               <TextInput
+                autoCapitalize='none'
                 underlineColorAndroid='rgba(0,0,0,0)'
                 placeholder='Choose your username'
                 style={styles.input}
@@ -80,11 +94,16 @@ export default SetupProfile = ({ onSetup, loading }) => {
                 }
               />
               <Select
-                placeholder='Select tag'
-                value={tags?.length > 0 ? tags[selectedIndex.row].tagName : ""}
+                value={
+                  tags?.length > 0
+                    ? tags[selectedIndex.row].tagName
+                    : "Select your room"
+                }
+                onFocus={() => Keyboard.dismiss()}
                 selectedIndex={selectedIndex}
                 onSelect={(index) => {
                   setSelectedIndex(index);
+                  setSelected(tags[index.row]);
                 }}
                 style={styles.inputSelect}
               >
@@ -103,7 +122,7 @@ export default SetupProfile = ({ onSetup, loading }) => {
           <View style={styles.btnParent}>
             <Button
               style={styles.btn}
-              onPress={() => onSetup(userProfile, route)}
+              onPress={() => onSetup(userProfile, selectedTag, route)}
             >
               {!loading ? (
                 "Finish setup"

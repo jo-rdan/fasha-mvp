@@ -230,7 +230,9 @@ const EditProfile = (props) => {
                 placeholder='Full Names'
                 style={styles.input}
                 value={user.fullnames}
-                onChangeText={(fullNames) => setUser({ ...user, fullNames })}
+                onChangeText={(fullNames) =>
+                  setUser({ ...user, fullnames: fullNames })
+                }
               />
               <TextInput
                 underlineColorAndroid='rgba(0,0,0,0)'
