@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   Image,
   Platform,
@@ -6,12 +6,15 @@ import {
   StyleSheet,
   View,
   TouchableHighlight,
+  RefreshControl,
+  ScrollView,
 } from "react-native";
 import {
   useIsFocused,
   useNavigation,
   useRoute,
 } from "@react-navigation/native";
+import { FAB } from "react-native-paper";
 import {
   Text,
   Icon,
@@ -35,9 +38,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FASHA_KEY, API_URL } from "dotenv";
 import jwt from "expo-jwt";
 import axios from "axios";
-import { ScrollView } from "react-native-gesture-handler";
+// import { ScrollView } from "react-native-gesture-handler";
 import connectSocket from "../helpers/socketConnection";
 import AddPost from "./AddPost";
+import { Portal } from "react-native-portalize";
 
 const AddIcon = (props) => (
   <Icon
@@ -65,14 +69,12 @@ const rightActions = (props) => {
     <View
       style={{
         flexDirection: "row",
-        width: "70%",
-        justifyContent: "space-between",
+        width: "100%",
+        // backgroundColor: "red",
+        justifyContent: "flex-end",
       }}
     >
-      <View style={{ width: "20%" }}>
-        <AddIcon />
-      </View>
-      <View style={{ width: "10%" }}>
+      <View>
         <MessageIcon />
       </View>
     </View>
@@ -87,84 +89,112 @@ const Homepage = (props) => {
   const [selectedPost, setSelectedPost] = useState({});
   const [isDeleted, setIsDeleted] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [showGroup, setShow] = useState(false);
+  const [refreshing, setRefreshing] = React.useState(false);
 
   const panelRef = useRef(null);
   const isFocused = useIsFocused();
 
-  useEffect(() => {
-    const fetchToken = async () => {
-      try {
-        if (!isFocused) return;
-        const token = await AsyncStorage.getItem("token");
-        const socket = connectSocket(token);
-        setLoading(true);
+  const fetchToken = async () => {
+    try {
+      if (!isFocused) return;
+      const token = await AsyncStorage.getItem("token");
+      const socket = connectSocket(token);
+      setLoading(true);
 
-        const isUser = await axios.get(`${API_URL}/users/user/profile`, {
+      const isUser = await axios.get(`${API_URL}/users/user/profile`, {
+        headers: { token },
+      });
+      const { data } = isUser.data;
+      setUser(data);
+      const response = await axios.get(
+        `${API_URL}/posts/?tagName=${data?.tag?.tagName}`,
+        {
           headers: { token },
+        }
+      );
+      setRefreshing(false);
+      setLoading(false);
+      setPosts(response.data.data);
+      socket.emit("joining", { tag: data?.tag });
+      socket.on("created post", (data) => {
+        // if (data.posts.length <= 0) return;
+        setPosts(data.posts);
+        // if (isUser?.data.data.uuid === data.creator) {
+        return Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Post created",
+          autoHide: true,
+          visibilityTime: 2000,
+          position: "top",
         });
-        const { data } = isUser.data;
-        setUser(data);
-        const response = await axios.get(
-          `${API_URL}/posts/?tagName=${data?.tag.tagName}`,
-          {
-            headers: { token },
-          }
-        );
-        setLoading(false);
-        setPosts(response.data.data);
-        socket.emit("joining", { tag: data?.tag });
-        socket.on("created post", (data) => {
-          // if (data.posts.length <= 0) return;
-          setPosts(data.posts);
-          // if (isUser?.data.data.uuid === data.creator) {
-          return Toast.show({
-            type: "success",
-            text1: "Success",
-            text2: "Post created",
-            autoHide: true,
-            visibilityTime: 2000,
-            position: "top",
-          });
-          // }
-          // console.log("cops");
-          // return Toast.show({
-          //   type: "success",
-          //   text1: "New Posts",
-          //   text2: "New Posts created",
-          //   autoHide: true,
-          //   visibilityTime: 2000,
-          //   position: "top",
-          // });
+        // }
+        // console.log("cops");
+        // return Toast.show({
+        //   type: "success",
+        //   text1: "New Posts",
+        //   text2: "New Posts created",
+        //   autoHide: true,
+        //   visibilityTime: 2000,
+        //   position: "top",
+        // });
+      });
+      return;
+    } catch (error) {
+      setLoading(false);
+      console.log(error, "=< error");
+      if (error && error.response.status === 404)
+        return Toast.show({
+          type: "error",
+          text1: "Not found",
+          text2: error.response.data.error,
+          position: "top",
         });
-        return;
-      } catch (error) {
-        setLoading(false);
-        console.log(error, "=< error");
-        if (error && error.response.status === 404)
-          return Toast.show({
-            type: "error",
-            text1: "Not found",
-            text2: error.response.data.error,
-            position: "top",
-          });
-        if (error && error.response.status === 500)
-          return Toast.show({
-            type: "error",
-            text1: "Error",
-            text2: "Something went wrong, try again later",
-            position: "top",
-          });
-
+      if (error && error.response.status === 500)
         return Toast.show({
           type: "error",
           text1: "Error",
-          text2: error.message,
+          text2: "Something went wrong, try again later",
           position: "top",
         });
-      }
-    };
+
+      return Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+        position: "top",
+      });
+    }
+  };
+
+  useEffect(() => {
     fetchToken();
   }, [isDeleted]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    const refresh = async () => {
+      const token = await AsyncStorage.getItem("token");
+      const socket = connectSocket(token);
+
+      const isUser = await axios.get(`${API_URL}/users/user/profile`, {
+        headers: { token },
+      });
+      const { data } = isUser.data;
+      setUser(data);
+      const response = await axios.get(
+        `${API_URL}/posts/?tagName=${data?.tag?.tagName}`,
+        {
+          headers: { token },
+        }
+      );
+      setRefreshing(false);
+      setPosts(response.data.data);
+    };
+    refresh();
+  }, []);
+
   const handleDate = (current, previous) => {
     const minutesUnit = 60 * 1000;
     const hoursUnit = minutesUnit * 60;
@@ -271,7 +301,12 @@ const Homepage = (props) => {
           accessoryRight={renderRightActions}
         />
         {!loading ? (
-          <ScrollView>
+          <ScrollView
+            contentContainerStyle={styles.scrollView}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          >
             <Layout style={styles.body}>
               {posts && posts.length > 0 ? (
                 posts.map((post) => {
@@ -375,15 +410,10 @@ const Homepage = (props) => {
                 })
               ) : (
                 <View style={styles.newPost}>
-                  <Icon
-                    name='plus-circle-outline'
-                    onPress={() => setVisible(true)}
-                    fill='black'
-                    width={50}
-                    height={50}
-                  />
-
-                  <Text>Create New Post</Text>
+                  <Icon name='message-square-outline' height={20} fill='grey' />
+                  <Text appearance='hint'>
+                    No posts yet created in your group
+                  </Text>
                 </View>
               )}
             </Layout>
@@ -396,54 +426,61 @@ const Homepage = (props) => {
           </Layout>
         )}
       </Layout>
-      <View>
-        <BottomNav />
-      </View>
-      <BottomSheet
-        ref={(ref) => {
-          panelRef.current = ref;
-        }}
-        sliderMinHeight={0}
-        isOpen={false}
-      >
-        {[
-          {
-            title: "Edit post",
-            icon: "edit-2-outline",
-            onPress: () => {
-              panelRef.current.togglePanel();
-              navigation.navigate("Edit Post", {
-                image: user && user.image,
-                post: selectedPost,
-              });
+      <FAB
+        label={showGroup ? user.tag?.tagName : ""}
+        style={styles.fab}
+        small={false}
+        icon='plus'
+        onPress={() => setVisible(true)}
+        onLongPress={() => setShow(!showGroup)}
+      />
+      <Portal>
+        <BottomSheet
+          ref={(ref) => {
+            panelRef.current = ref;
+          }}
+          sliderMinHeight={0}
+          isOpen={false}
+        >
+          {[
+            {
+              title: "Edit post",
+              icon: "edit-2-outline",
+              onPress: () => {
+                panelRef.current.togglePanel();
+                navigation.navigate("Edit Post", {
+                  image: user && user.image,
+                  post: selectedPost,
+                });
+              },
             },
-          },
-          {
-            title: "Delete post",
-            icon: "trash-2-outline",
-            onPress: handleDeletePost,
-          },
-        ].map((item, index) => {
-          return (
-            <View key={index}>
-              <TouchableHighlight
-                onPress={item.onPress}
-                underlayColor='#F1F1F1'
-              >
-                <View style={{ flexDirection: "row", paddingVertical: "5%" }}>
-                  <View style={{ width: "15%" }}>
-                    <Icon name={`${item.icon}`} fill='#8f9bb3' height={20} />
+            {
+              title: "Delete post",
+              icon: "trash-2-outline",
+              onPress: handleDeletePost,
+            },
+          ].map((item, index) => {
+            return (
+              <View key={index}>
+                <TouchableHighlight
+                  onPress={item.onPress}
+                  underlayColor='#F1F1F1'
+                >
+                  <View style={{ flexDirection: "row", paddingVertical: "5%" }}>
+                    <View style={{ width: "15%" }}>
+                      <Icon name={`${item.icon}`} fill='#8f9bb3' height={20} />
+                    </View>
+                    <View>
+                      <Text>{item.title}</Text>
+                    </View>
                   </View>
-                  <View>
-                    <Text>{item.title}</Text>
-                  </View>
-                </View>
-              </TouchableHighlight>
-              <Divider />
-            </View>
-          );
-        })}
-      </BottomSheet>
+                </TouchableHighlight>
+                <Divider />
+              </View>
+            );
+          })}
+        </BottomSheet>
+      </Portal>
     </>
   );
 };
@@ -481,6 +518,13 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   header: { minHeight: 128 },
+  fab: {
+    position: "absolute",
+    backgroundColor: "#3366ff",
+    margin: 16,
+    right: 0,
+    bottom: 0,
+  },
   icons: {
     alignSelf: "flex-start",
   },
@@ -559,6 +603,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  scrollView: {
+    flexGrow: 1,
+    // alignItems: "center",
+    // justifyContent: "center",
   },
   title: {
     fontSize: 24,

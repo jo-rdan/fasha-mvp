@@ -11,6 +11,8 @@ import {
   KeyboardAvoidingView,
   TouchableHighlight,
 } from "react-native";
+import { FAB, Badge } from "react-native-paper";
+
 import {
   Text,
   Icon,
@@ -39,8 +41,8 @@ import {
 import axios from "axios";
 import { FASHA_KEY, API_URL } from "dotenv";
 import jwt from "expo-jwt";
-import BottomNav from "./shared/BottomNav";
 import AddPost from "./AddPost";
+import { Portal } from "react-native-portalize";
 
 const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
   const [visible, setVisible] = useState(false);
@@ -48,6 +50,8 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
   const [selectedPost, setSelectedPost] = useState({});
   const [user, setUser] = useState({});
   const [isDeleted, setIsDeleted] = useState(false);
+  const [showGroup, setShow] = useState(false);
+
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const route = useRoute();
@@ -218,12 +222,6 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
 
   const renderRightActions = () => (
     <React.Fragment>
-      <TopNavigationAction
-        icon={AddIcon}
-        onPress={() =>
-          navigation.navigate("Add Post", { image: user && user.image })
-        }
-      />
       <OverflowMenu
         anchor={SettingsAction}
         visible={visible}
@@ -235,7 +233,7 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
           onPress={() => {
             setVisible(false);
             navigation.navigate("Edit Profile", {
-              ...user,
+              user: user,
             });
           }}
         />
@@ -272,212 +270,252 @@ const Profile = ({ onLogout, onDelete, loading, setLoading }) => {
   );
 
   return (
-    <Layout style={styles.container}>
-      <TopNavigation
-        accessoryLeft={BackAction}
-        title={() => <Text style={styles.title}>{user.fullnames}</Text>}
-        subtitle={user && user.username ? `@${user.username}` : ""}
-        accessoryRight={renderRightActions}
+    <>
+      <AddPost
+        visible={showModal}
+        setVisible={setShowModal}
+        image={user && user.image}
       />
-      <ScrollView>
-        {loading ? (
-          <View style={styles.spinner}>
-            <Spinner size='medium' />
-          </View>
-        ) : (
-          <Text></Text>
-        )}
-        <View style={styles.profileContainer}>
-          <View>
-            {user.image ? (
-              <Image source={{ uri: user.image }} style={styles.avatar} />
-            ) : (
-              <View
-                style={{
-                  backgroundColor: "lightgray",
-                  width: 70,
-                  height: 70,
-                  top: -15,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 50,
-                }}
-              >
-                <Avatar ImageComponent={PersonAction} size='medium' />
-              </View>
-            )}
-          </View>
-          <View
-            style={{
-              width: "60%",
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <View style={styles.numbersContainer}>
-              <Text style={styles.numbers}>
-                {user && user.posts ? user.posts.length : 0}
-              </Text>
-              <Text>Posts</Text>
-            </View>
-            <View style={styles.numbersContainer}>
-              <Text style={styles.numbers}>0</Text>
-              <Text>Groups</Text>
-            </View>
-            <View style={styles.numbersContainer}>
-              <Text style={styles.numbers}>0</Text>
-              <Text>Stories</Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.bioContainer}>
-          <Text style={styles.bioTitle}>Biography</Text>
-          <View style={styles.bio}>
+      <Layout style={styles.container}>
+        <TopNavigation
+          title={() => <Text style={styles.title}>{user.fullnames}</Text>}
+          subtitle={() => (
             <Text
-              style={styles.bioText}
-              appearance={user && !user.bio ? "hint" : "normal"}
+              appearance='hint'
+              style={{ paddingHorizontal: 10, fontSize: 12 }}
             >
-              {user.bio}
+              {user && user.username ? `@${user.username}` : ""}
             </Text>
-          </View>
-        </View>
-
-        {user && user.posts && user.posts.length > 0 ? (
-          user.posts.length > 0 &&
-          user.posts.map((post) => {
-            const elapsed = handleDate(new Date(), +new Date(post.createdAt));
-            return (
-              <TouchableHighlight
-                key={post.uuid}
-                underlayColor='#F1F1F1'
-                onPress={() => navigation.navigate("Post", { uuid: post.uuid })}
-              >
-                <View style={styles.posts}>
-                  <View style={styles.postContainer}>
-                    <View style={styles.postAvatar}>
-                      <Avatar size='medium' source={{ uri: user.image }} />
-                    </View>
-                    <View style={styles.postUser}>
-                      <View style={styles.postHeader}>
-                        <Text style={styles.numbers}>{user.fullnames}</Text>
-                        <Text appearance='hint' style={styles.postUsername}>
-                          {`@${user.username}`}
-                        </Text>
-                      </View>
-                      <View style={styles.postTime}>
-                        <Text appearance='hint' style={{ fontSize: 12 }}>
-                          {elapsed
-                            ? elapsed
-                            : `${new Date(post.createdAt).getDate()}-${new Date(
-                                post.createdAt
-                              ).getMonth()}-${new Date(
-                                post.createdAt
-                              ).getFullYear()}`}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.postMedia}>
-                    <View style={styles.postCaption}>
-                      {post.postcaption ? (
-                        <Text>{post.postcaption}</Text>
-                      ) : null}
-                    </View>
-                    <View>
-                      {post.postmedia ? (
-                        <Image
-                          source={{ uri: post.postmedia }}
-                          style={styles.postImage}
-                        />
-                      ) : (
-                        <Layout></Layout>
-                      )}
-                    </View>
-                  </View>
-                  <View style={{ flexDirection: "row" }}>
-                    <View style={{ width: "8%" }}>
-                      <Icons
-                        name='message-circle-outline'
-                        fill='#8f9bb3'
-                        height={18}
-                      />
-                    </View>
-                    <Text appearance='hint'>{post.comments.length}</Text>
-                    <View style={{ width: "20%" }}>
-                      <Icons
-                        name='more-horizontal-outline'
-                        fill='#8f9bb3'
-                        height={18}
-                        onPress={() => {
-                          setSelectedPost(post);
-                          panelRef.current.togglePanel();
-                        }}
-                      />
-                    </View>
-                  </View>
-                </View>
-              </TouchableHighlight>
-            );
-          })
-        ) : (
-          <View style={styles.noPost}>
-            <Text category='h5'>No posts found</Text>
-            <Image
-              source={require("../assets/app/post.png")}
-              style={styles.noPostImage}
-            />
-          </View>
-        )}
-      </ScrollView>
-      <View>
-        <BottomNav />
-      </View>
-      <BottomSheet
-        ref={(ref) => {
-          panelRef.current = ref;
-        }}
-        sliderMinHeight={0}
-        isOpen={false}
-      >
-        {[
-          {
-            title: "Edit post",
-            icon: "edit-2-outline",
-            onPress: () => {
-              panelRef.current.togglePanel();
-              navigation.navigate("Edit Post", {
-                image: user && user.image,
-                post: selectedPost,
-              });
-            },
-          },
-          {
-            title: "Delete post",
-            icon: "trash-2-outline",
-            onPress: handleDeletePost,
-          },
-        ].map((item, index) => {
-          return (
-            <View key={index}>
-              <TouchableHighlight
-                onPress={item.onPress}
-                underlayColor='#F1F1F1'
-              >
-                <View style={{ flexDirection: "row", paddingVertical: "5%" }}>
-                  <View style={{ width: "15%" }}>
-                    <Icons name={`${item.icon}`} fill='#8f9bb3' height={20} />
-                  </View>
-                  <View>
-                    <Text>{item.title}</Text>
-                  </View>
-                </View>
-              </TouchableHighlight>
-              <Divider />
+          )}
+          accessoryRight={renderRightActions}
+        />
+        <ScrollView>
+          {loading ? (
+            <View style={styles.spinner}>
+              <Spinner size='medium' />
             </View>
-          );
-        })}
-      </BottomSheet>
-    </Layout>
+          ) : (
+            <Text></Text>
+          )}
+          <View style={styles.profileContainer}>
+            <View>
+              {user.image ? (
+                <Image source={{ uri: user.image }} style={styles.avatar} />
+              ) : (
+                <View
+                  style={{
+                    backgroundColor: "lightgray",
+                    width: 70,
+                    height: 70,
+                    top: -15,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 50,
+                  }}
+                >
+                  <Avatar ImageComponent={PersonAction} size='medium' />
+                </View>
+              )}
+            </View>
+            <View
+              style={{
+                width: "60%",
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+              <View style={styles.numbersContainer}>
+                <Text style={styles.numbers}>
+                  {user && user.posts ? user.posts.length : 0}
+                </Text>
+                <Text>Posts</Text>
+              </View>
+              <View style={styles.numbersContainer}>
+                <Text style={styles.numbers}>0</Text>
+                <Text>Groups</Text>
+              </View>
+              <View style={styles.numbersContainer}>
+                <Text style={styles.numbers}>0</Text>
+                <Text>Stories</Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.bioContainer}>
+            <Text style={styles.bioTitle}>Biography</Text>
+            <View style={styles.bio}>
+              <Text
+                style={styles.bioText}
+                appearance={user && !user.bio ? "hint" : "normal"}
+              >
+                {user.bio}
+              </Text>
+            </View>
+          </View>
+
+          {user && user.posts && user.posts.length > 0 ? (
+            user.posts.length > 0 &&
+            user.posts.map((post) => {
+              const elapsed = handleDate(new Date(), +new Date(post.createdAt));
+              return (
+                <TouchableHighlight
+                  key={post.uuid}
+                  underlayColor='#F1F1F1'
+                  onPress={() =>
+                    navigation.navigate("Post", { uuid: post.uuid })
+                  }
+                >
+                  <View style={styles.posts}>
+                    <View>
+                      <Badge
+                        style={{
+                          backgroundColor: "#8338EC",
+                          paddingHorizontal: 10,
+                        }}
+                      >
+                        {post.tag.tagName}
+                      </Badge>
+                    </View>
+                    <View style={styles.postContainer}>
+                      <View style={styles.postAvatar}>
+                        <Avatar size='medium' source={{ uri: user.image }} />
+                      </View>
+                      <View style={styles.postUser}>
+                        <View style={styles.postHeader}>
+                          <Text style={styles.numbers}>{user.fullnames}</Text>
+                          <Text appearance='hint' style={styles.postUsername}>
+                            {`@${user.username}`}
+                          </Text>
+                        </View>
+                        <View style={styles.postTime}>
+                          <Text appearance='hint' style={{ fontSize: 12 }}>
+                            {elapsed
+                              ? elapsed
+                              : `${new Date(
+                                  post.createdAt
+                                ).getDate()}-${new Date(
+                                  post.createdAt
+                                ).getMonth()}-${new Date(
+                                  post.createdAt
+                                ).getFullYear()}`}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <View style={styles.postMedia}>
+                      <View style={styles.postCaption}>
+                        {post.postcaption ? (
+                          <Text>{post.postcaption}</Text>
+                        ) : null}
+                      </View>
+                      <View>
+                        {post.postmedia ? (
+                          <Image
+                            source={{ uri: post.postmedia }}
+                            style={styles.postImage}
+                          />
+                        ) : (
+                          <Layout></Layout>
+                        )}
+                      </View>
+                    </View>
+                    <View style={{ flexDirection: "row" }}>
+                      <View style={{ width: "8%" }}>
+                        <Icons
+                          name='message-circle-outline'
+                          fill='#8f9bb3'
+                          height={18}
+                        />
+                      </View>
+                      <Text appearance='hint'>{post.comments.length}</Text>
+                      <View style={{ width: "20%" }}>
+                        <Icons
+                          name='more-horizontal-outline'
+                          fill='#8f9bb3'
+                          height={18}
+                          onPress={() => {
+                            setSelectedPost(post);
+                            panelRef.current.togglePanel();
+                          }}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                </TouchableHighlight>
+              );
+            })
+          ) : (
+            <View style={styles.noPost}>
+              <Text category='h5'>No posts found</Text>
+              <Image
+                source={require("../assets/app/post.png")}
+                style={styles.noPostImage}
+              />
+            </View>
+          )}
+        </ScrollView>
+        <FAB
+          label={showGroup ? user.tag?.tagName : ""}
+          style={styles.fab}
+          small={false}
+          icon='plus'
+          onPress={() => setShowModal(true)}
+          onLongPress={() => setShow(!showGroup)}
+        />
+        <Portal>
+          <BottomSheet
+            ref={(ref) => {
+              panelRef.current = ref;
+            }}
+            sliderMinHeight={0}
+            isOpen={false}
+          >
+            {[
+              {
+                title: "Edit post",
+                icon: "edit-2-outline",
+                onPress: () => {
+                  panelRef.current.togglePanel();
+                  navigation.navigate("Edit Post", {
+                    image: user && user.image,
+                    post: selectedPost,
+                  });
+                },
+              },
+              {
+                title: "Delete post",
+                icon: "trash-2-outline",
+                onPress: handleDeletePost,
+              },
+            ].map((item, index) => {
+              return (
+                <View key={index}>
+                  <TouchableHighlight
+                    onPress={item.onPress}
+                    underlayColor='#F1F1F1'
+                  >
+                    <View
+                      style={{ flexDirection: "row", paddingVertical: "5%" }}
+                    >
+                      <View style={{ width: "15%" }}>
+                        <Icons
+                          name={`${item.icon}`}
+                          fill='#8f9bb3'
+                          height={20}
+                        />
+                      </View>
+                      <View>
+                        <Text>{item.title}</Text>
+                      </View>
+                    </View>
+                  </TouchableHighlight>
+                  <Divider />
+                </View>
+              );
+            })}
+          </BottomSheet>
+        </Portal>
+      </Layout>
+    </>
   );
 };
 
@@ -512,6 +550,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
+  fab: {
+    position: "absolute",
+    backgroundColor: "#3366ff",
+    margin: 16,
+    right: 0,
+    bottom: 0,
   },
   header: { minHeight: 128 },
   icons: {
@@ -591,5 +636,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "black",
+    paddingHorizontal: 10,
   },
 });
