@@ -55,7 +55,6 @@ const AddPost = ({ visible, setVisible, image }) => {
   // const { image } = route.params;
 
   useEffect(() => {
-    console.log(disable);
     const fetchToken = async () => {
       const token = await AsyncStorage.getItem("token");
       const socketCon = connectSocket(token);
@@ -160,6 +159,7 @@ const AddPost = ({ visible, setVisible, image }) => {
         user,
       });
       setIsCreating(false);
+      navigation.jumpTo("Feed");
       onHide();
     } catch (error) {
       setIsCreating(false);

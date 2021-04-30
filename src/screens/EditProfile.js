@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   Alert,
   Keyboard,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
   StatusBar,
@@ -42,25 +43,29 @@ const EditProfile = (props) => {
   const data = ["Choose privacy option", "public", "private"];
   const [selectedIndex, setSelectedIndex] = useState(new IndexPath(0));
   const [user, setUser] = useState({
-    fullnames: route.params.fullnames,
-    username: route.params.username,
-    imageUri: route.params.image,
+    fullnames: route.params.user.fullnames,
+    username: route.params.user.username,
+    imageUri: route.params.user.image,
     image: "",
-    privacy: route.params.privacy,
+    tag: route.params.user.tag,
+    privacy: route.params.user.privacy,
   });
+  // const [user, setUser] = useState(route.params.user);
+  const [tags, setTags] = useState([]);
   const [userProfile, setUserProfile] = useState({});
   const [loading, setLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  // useEffect(() => {
-  //   const fetchUser = async () => {
-  //     const token = await AsyncStorage.getItem("token");
-  //     const data = jwt.decode(token, FASHA_KEY);
-  //     setUserProfile(data);
-  //     return;
-  //   };
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = await AsyncStorage.getItem("token");
+      const data = await axios.get(`${API_URL}/tags`);
+      setTags(data.data.data);
+      return;
+    };
 
-  //   fetchUser();
-  // }, []);
+    fetchUser();
+  }, []);
+
   const BackIcon = (props) => <Icon {...props} name='arrow-back' />;
 
   const BackAction = () => (
@@ -127,16 +132,17 @@ const EditProfile = (props) => {
     Keyboard.dismiss();
     try {
       // const { id } = userProfile;
-      const { imageUri, ...userData } = user;
+      const { imageUri, tag, ...userData } = user;
       const token = await AsyncStorage.getItem("token");
       setIsUpdating(true);
       const response = await axios.patch(
-        `${API_URL}/users/edit-profile`,
+        `${API_URL}/users/edit-profile?tag=${tag.tagId}`,
         {
           ...userData,
         },
         { headers: { token } }
       );
+      console.log("------", response.data.data);
       setIsUpdating(false);
       if (response.status === 200)
         return Toast.show({
@@ -190,92 +196,100 @@ const EditProfile = (props) => {
       />
 
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <Layout style={styles.body}>
-          <Layout style={styles.userImage}>
-            <Layout>
-              <Avatar
-                source={
-                  !user.imageUri
-                    ? require("../assets/app/user.png")
-                    : { uri: user.imageUri }
-                }
-                style={styles.avatar}
-              />
-              {loading ? (
-                <Layout
-                  style={{
-                    backgroundColor: "transparent",
-                    top: "-50%",
-                    width: "10%",
-                    left: "10%",
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior='padding'>
+          <Layout style={styles.body}>
+            <Layout style={styles.userImage}>
+              <Layout>
+                <Avatar
+                  source={{ uri: user?.imageUri }}
+                  style={styles.avatar}
+                />
+                {loading ? (
+                  <Layout
+                    style={{
+                      backgroundColor: "transparent",
+                      top: "-50%",
+                      width: "10%",
+                      left: "10%",
+                    }}
+                  >
+                    <Spinner size='medium' />
+                  </Layout>
+                ) : (
+                  <Layout></Layout>
+                )}
+              </Layout>
+              <Layout>
+                <Text status='primary' onPress={takeImage}>
+                  Change profile image
+                </Text>
+              </Layout>
+            </Layout>
+            <Layout style={{ width: "90%", alignSelf: "center" }}>
+              <Layout style={{ alignItems: "center" }}>
+                <TextInput
+                  underlineColorAndroid='rgba(0,0,0,0)'
+                  autoCorrect={false}
+                  placeholder='Full Names'
+                  style={styles.input}
+                  value={user.fullnames}
+                  onChangeText={(fullNames) =>
+                    setUser({ ...user, fullnames: fullNames })
+                  }
+                />
+                <TextInput
+                  underlineColorAndroid='rgba(0,0,0,0)'
+                  autoCorrect={false}
+                  placeholder='@Username'
+                  style={styles.input}
+                  value={user.username}
+                  onChangeText={(username) => setUser({ ...user, username })}
+                />
+                <Select
+                  value={!user.privacy ? data[selectedIndex.row] : user.privacy}
+                  selectedIndex={selectedIndex}
+                  onSelect={(index) => {
+                    setUser({
+                      ...user,
+                      privacy: data[index.row],
+                    });
                   }}
+                  style={styles.select}
                 >
-                  <Spinner size='medium' />
-                </Layout>
-              ) : (
-                <Layout></Layout>
-              )}
+                  {data.map((data, index) => (
+                    <SelectItem
+                      title={data}
+                      key={index}
+                      disabled={index === 0}
+                    />
+                  ))}
+                </Select>
+                <Select
+                  value={
+                    !user?.tag?.tagName
+                      ? tags.length > 0 && tags[selectedIndex.row].tagName
+                      : user.tag.tagName
+                  }
+                  selectedIndex={selectedIndex}
+                  onSelect={(index) => {
+                    setUser({
+                      ...user,
+                      tag: tags[index.row],
+                    });
+                  }}
+                  style={styles.select}
+                >
+                  {tags.map((tag, index) => (
+                    <SelectItem title={tag.tagName} key={tag.tagId} />
+                  ))}
+                </Select>
+              </Layout>
             </Layout>
-            <Layout>
-              <Text status='primary' onPress={takeImage}>
-                Change profile image
-              </Text>
-            </Layout>
-          </Layout>
-          <Layout style={{ width: "90%", alignSelf: "center" }}>
-            <Layout style={{ alignItems: "center" }}>
-              <TextInput
-                underlineColorAndroid='rgba(0,0,0,0)'
-                autoCorrect={false}
-                placeholder='Full Names'
-                style={styles.input}
-                value={user.fullnames}
-                onChangeText={(fullNames) =>
-                  setUser({ ...user, fullnames: fullNames })
-                }
-              />
-              <TextInput
-                underlineColorAndroid='rgba(0,0,0,0)'
-                autoCorrect={false}
-                placeholder='@Username'
-                style={styles.input}
-                value={user.username}
-                onChangeText={(username) => setUser({ ...user, username })}
-              />
-              {/* <Select
-                placeholder='Your privacy'
-                value={
-                  selectedIndex.row < 0 ? "Category" : data[selectedIndex.row]
-                }
-                selectedIndex={selectedIndex}
-                onSelect={(index) => setSelectedIndex(index)}
-                style={styles.select}
-              >
-                {data.map((data, index) => (
-                  <SelectItem title={data} key={index} />
-                ))}
-              </Select> */}
-              <Select
-                value={!user.privacy ? data[selectedIndex.row] : user.privacy}
-                selectedIndex={selectedIndex}
-                onSelect={(index) => {
-                  setUser({
-                    ...user,
-                    privacy: data[index.row],
-                  });
-                }}
-                style={styles.select}
-              >
-                {data.map((data, index) => (
-                  <SelectItem title={data} key={index} disabled={index === 0} />
-                ))}
-              </Select>
-            </Layout>
-          </Layout>
-          {/* <Layout style={{ alignItems: "flex-start" }}>
+            {/* <Layout style={{ alignItems: "flex-start" }}>
             <Text status='primary'>Personal Information</Text>
           </Layout> */}
-        </Layout>
+          </Layout>
+        </KeyboardAvoidingView>
       </ScrollView>
       {/* <Layout>
         <BottomNav />
