@@ -606,13 +606,13 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   postImage: {
-    width: 200,
+    width: "85%",
     height: 200,
     alignSelf: "center",
     marginBottom: "5%",
+    borderRadius: 10,
   },
   postMedia: {
-    // minHeight: 100,
     justifyContent: "space-between",
   },
   postUser: {
