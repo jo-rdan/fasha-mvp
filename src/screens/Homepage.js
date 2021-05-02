@@ -89,9 +89,9 @@ const Homepage = (props) => {
   const [selectedPost, setSelectedPost] = useState({});
   const [isDeleted, setIsDeleted] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [showGroup, setShow] = useState(false);
+  const [showGroup, setShow] = useState(true);
   const [refreshing, setRefreshing] = React.useState(false);
-
+  const [socket, setSocket] = useState();
   const panelRef = useRef(null);
   const isFocused = useIsFocused();
 
@@ -99,7 +99,8 @@ const Homepage = (props) => {
     try {
       if (!isFocused) return;
       const token = await AsyncStorage.getItem("token");
-      const socket = connectSocket(token);
+      const socketCon = connectSocket(token);
+      setSocket(socketCon);
       setLoading(true);
 
       const isUser = await axios.get(`${API_URL}/users/user/profile`, {
@@ -140,6 +141,34 @@ const Homepage = (props) => {
         //   position: "top",
         // });
       });
+
+      socket.on("edited post", (data) => {
+        console.log(data);
+        setPosts(data.posts);
+        // if (isUser?.data.data.uuid === data.creator) {
+        return Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Post Edited",
+          autoHide: true,
+          visibilityTime: 2000,
+          position: "top",
+        });
+      });
+
+      socket.on("deleted post", (data) => {
+        console.log(data);
+        setPosts(data.posts);
+        // if (isUser?.data.data.uuid === data.creator) {
+        return Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Post Deleted",
+          autoHide: true,
+          visibilityTime: 2000,
+          position: "top",
+        });
+      });
       return;
     } catch (error) {
       setLoading(false);
@@ -170,7 +199,7 @@ const Homepage = (props) => {
 
   useEffect(() => {
     fetchToken();
-  }, [isDeleted]);
+  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -226,24 +255,25 @@ const Homepage = (props) => {
     try {
       const token = await AsyncStorage.getItem("token");
       setLoading(true);
-      const response = await axios.delete(
-        `${API_URL}/posts/${selectedPost.uuid}`,
-        {
-          headers: { token },
-        }
-      );
-      if (response.status === 200) {
-        setLoading(false);
-        setIsDeleted(true);
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: response.data.message,
-          position: "bottom",
-        });
-        setIsDeleted(false);
-        return;
-      }
+      socket.emit("delete post", { postId: selectedPost.uuid, user });
+      // const response = await axios.delete(
+      //   `${API_URL}/posts/${selectedPost.uuid}`,
+      //   {
+      //     headers: { token },
+      //   }
+      // );
+      // if (response.status === 200) {
+      //   setLoading(false);
+      //   setIsDeleted(true);
+      //   Toast.show({
+      //     type: "success",
+      //     text1: "Success",
+      //     text2: response.data.message,
+      //     position: "bottom",
+      //   });
+      //   setIsDeleted(false);
+      //   return;
+      // }
       setLoading(false);
       return;
     } catch (error) {
@@ -578,10 +608,11 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   postImage: {
-    width: 200,
+    width: "85%",
     height: 200,
     alignSelf: "center",
     marginBottom: "5%",
+    borderRadius: 10,
   },
   postMedia: {
     // minHeight: 100,

@@ -23,6 +23,8 @@ import * as Permissions from "expo-permissions";
 import { API_URL, CLOUDINARY_API, FASHA_KEY } from "dotenv";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import connectSocket from "../helpers/socketConnection";
+import JWT from "expo-jwt";
 
 const CloseIcon = (props) => (
   <Icon fill='grey' width={30} height={30} {...props} name='close-outline' />
@@ -45,9 +47,20 @@ const EditPost = (props) => {
   const [loading, setLoading] = useState(false);
   const [disable, setDisable] = useState(newPost ? false : true);
   const [clearImage, setClearImage] = useState(false);
+  const [socket, setSocket] = useState();
+  const [user, setUser] = useState({});
   const navigation = useNavigation();
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    const fetchToken = async () => {
+      const token = await AsyncStorage.getItem("token");
+      const isUser = JWT.decode(token, FASHA_KEY);
+      setUser(isUser);
+      const socketCon = connectSocket(token);
+      setSocket(socketCon);
+    };
+    fetchToken();
+  }, []);
 
   // const MusicIcon = (props) => (
   //   <Icon
@@ -72,7 +85,7 @@ const EditPost = (props) => {
     );
 
   const onHide = () => {
-    return navigation.goBack();
+    navigation.jumpTo("Feed");
   };
 
   const askForPermission = async () => {
@@ -142,26 +155,34 @@ const EditPost = (props) => {
       const { postcaption, postmedia } = newPost;
       const token = await AsyncStorage.getItem("token");
       setIsCreating(true);
-      const res = await axios.patch(
-        `${API_URL}/posts/${post.uuid}/edit`,
-        {
-          postcaption,
-          postmedia,
-        },
-        { headers: { token } }
-      );
+      // const res = await axios.patch(
+      //   `${API_URL}/posts/${post.uuid}/edit`,
+      //   {
+      //     postcaption,
+      //     postmedia,
+      //   },
+      //   { headers: { token } }
+      // );
+      socket.emit("edit post", {
+        postId: post.uuid,
+        data: { postcaption, postmedia },
+        user,
+      });
       setIsCreating(false);
-      if (res.status === 200) {
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: res.data.message,
-          position: "bottom",
-        });
-        onHide();
-        return;
-      }
+      navigation.goBack();
+      // onHide();
+      // if (res.status === 200) {
+      //   Toast.show({
+      //     type: "success",
+      //     text1: "Success",
+      //     text2: res.data.message,
+      //     position: "bottom",
+      //   });
+      //   onHide();
+      //   return;
+      // }
     } catch (error) {
+      console.log(error);
       setLoading(false);
       if (error && error.response.status === 403) {
         return Toast.show({
