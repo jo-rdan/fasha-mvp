@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Image, StyleSheet, TextInput, View, Keyboard } from "react-native";
+import { Image, StyleSheet, View, Keyboard } from "react-native";
 import {
   Avatar,
   Button,
@@ -262,14 +262,11 @@ const EditPost = (props) => {
               </Layout>
               <Layout style={{ width: "80%" }}>
                 {/* <Layout> */}
-                <TextInput
-                  underlineColorAndroid='transparent'
+                <Input
                   placeholder='Tell me anything'
-                  autoCorrect={false}
                   defaultValue={post.postcaption || ""}
                   multiline={true}
                   numberOfLines={5}
-                  style={styles.input}
                   onChangeText={(postCaption) => handlePostCaption(postCaption)}
                 />
                 {/* </Layout> */}
@@ -360,8 +357,6 @@ const styles = StyleSheet.create({
   },
   modal: {
     width: "98%",
-    // height: 300,
-    // justifyContent: "space-between",
   },
   postInput: {
     flexDirection: "row",

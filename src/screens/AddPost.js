@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Image, StyleSheet, TextInput, View, Keyboard } from "react-native";
+import { Image, StyleSheet, View, Keyboard } from "react-native";
 import {
   Avatar,
   Button,
@@ -229,13 +229,10 @@ const AddPost = ({ visible, setVisible, image }) => {
               </Layout>
               <Layout style={{ width: "80%" }}>
                 {/* <Layout> */}
-                <TextInput
-                  underlineColorAndroid='transparent'
+                <Input
                   placeholder='Tell me anything'
-                  autoCorrect={false}
                   multiline={true}
                   numberOfLines={5}
-                  style={styles.input}
                   onChangeText={(postCaption) => handlePostCaption(postCaption)}
                 />
                 {/* </Layout> */}

@@ -4,7 +4,6 @@ import {
   View,
   Image,
   StyleSheet,
-  TextInput,
   KeyboardAvoidingView,
   Alert,
   Platform,
@@ -14,6 +13,7 @@ import {
 import {
   Button,
   Text,
+  Input,
   Spinner,
   Select,
   SelectItem,
@@ -73,21 +73,15 @@ export default SetupProfile = ({ onSetup, loading }) => {
           </View>
           <View style={styles.form}>
             <View style={styles.innerForm}>
-              <TextInput
-                autoCapitalize='words'
-                underlineColorAndroid='rgba(0,0,0,0)'
+              <Input
                 placeholder='Full Names'
-                style={styles.input}
                 value={userProfile.fullNames}
                 onChangeText={(fullNames) =>
                   setUserProfile({ ...userProfile, fullNames })
                 }
               />
-              <TextInput
-                autoCapitalize='none'
-                underlineColorAndroid='rgba(0,0,0,0)'
+              <Input
                 placeholder='Choose your username'
-                style={styles.input}
                 value={userProfile.username}
                 onChangeText={(username) =>
                   setUserProfile({ ...userProfile, username })
@@ -105,7 +99,6 @@ export default SetupProfile = ({ onSetup, loading }) => {
                   setSelectedIndex(index);
                   setSelected(tags[index.row]);
                 }}
-                style={styles.inputSelect}
               >
                 {tags && tags.length > 0
                   ? tags.map((tag) => (
@@ -175,7 +168,7 @@ const styles = StyleSheet.create({
     // backgroundColor: "#F6F6F6",
     // padding: 10,
     // margin: 5,
-    width: "90%",
+    width: "100%",
   },
   logoBox: {
     alignItems: "flex-start",

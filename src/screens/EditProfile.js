@@ -7,7 +7,6 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  TextInput,
   View,
 } from "react-native";
 import {
@@ -227,21 +226,15 @@ const EditProfile = (props) => {
             </Layout>
             <Layout style={{ width: "90%", alignSelf: "center" }}>
               <Layout style={{ alignItems: "center" }}>
-                <TextInput
-                  underlineColorAndroid='rgba(0,0,0,0)'
-                  autoCorrect={false}
+                <Input
                   placeholder='Full Names'
-                  style={styles.input}
                   value={user.fullnames}
                   onChangeText={(fullNames) =>
                     setUser({ ...user, fullnames: fullNames })
                   }
                 />
-                <TextInput
-                  underlineColorAndroid='rgba(0,0,0,0)'
-                  autoCorrect={false}
+                <Input
                   placeholder='@Username'
-                  style={styles.input}
                   value={user.username}
                   onChangeText={(username) => setUser({ ...user, username })}
                 />
@@ -291,9 +284,6 @@ const EditProfile = (props) => {
           </Layout>
         </KeyboardAvoidingView>
       </ScrollView>
-      {/* <Layout>
-        <BottomNav />
-      </Layout> */}
     </Layout>
   );
 };
@@ -322,7 +312,7 @@ const styles = StyleSheet.create({
     width: "90%",
   },
   select: {
-    width: "90%",
+    width: "100%",
     margin: 5,
     borderRadius: 10,
   },

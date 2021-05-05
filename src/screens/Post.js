@@ -6,7 +6,6 @@ import {
   StatusBar,
   Alert,
   Image,
-  TextInput,
   ScrollView,
   KeyboardAvoidingView,
   TouchableHighlight,
@@ -28,6 +27,7 @@ import {
   ListItem,
   Divider,
   Button,
+  Input,
 } from "@ui-kitten/components";
 import Toast from "react-native-toast-message";
 
@@ -392,18 +392,16 @@ const Post = (props) => {
       </ScrollView>
       <View style={styles.commentBox}>
         <View style={{ width: "82%" }}>
-          <TextInput
-            underlineColorAndroid='rgba(0,0,0,0)'
+          <Input
             placeholder='Comment'
             ref={textRef}
-            style={styles.input}
-            autoCapitalize='none'
+            autoCapitalize='words'
             onChangeText={(comment) => handleInput(comment)}
           />
         </View>
         <View>
           <Button
-            appearance='ghost'
+            appearance='filled'
             size='small'
             onPress={handleComment}
             disabled={disable}

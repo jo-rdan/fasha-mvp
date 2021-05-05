@@ -4,13 +4,12 @@ import {
   View,
   Image,
   StyleSheet,
-  TextInput,
   KeyboardAvoidingView,
   Alert,
   Platform,
   StatusBar,
 } from "react-native";
-import { Button, Text, Spinner } from "@ui-kitten/components";
+import { Button, Text, Spinner, Input } from "@ui-kitten/components";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import axios from "axios";
 import { API_URL } from "dotenv";
@@ -92,21 +91,17 @@ export default Signup = ({ onSignup, loading }) => {
           </View>
           <View style={styles.form}>
             <View style={styles.innerForm}>
-              <TextInput
-                underlineColorAndroid='rgba(0,0,0,0)'
+              <Input
                 placeholder='Email'
-                style={styles.input}
-                autoCompleteType='email'
+                keyboardType='email-address'
                 autoCapitalize='none'
                 value={userData.userEmail}
                 onChangeText={(userEmail) =>
                   setUserData({ ...userData, userEmail })
                 }
               />
-              <TextInput
-                underlineColorAndroid='rgba(0,0,0,0)'
+              <Input
                 placeholder='Password'
-                style={styles.input}
                 secureTextEntry={true}
                 autoCapitalize='none'
                 value={userData.userPassword}
@@ -114,10 +109,8 @@ export default Signup = ({ onSignup, loading }) => {
                   setUserData({ ...userData, userPassword })
                 }
               />
-              <TextInput
-                underlineColorAndroid='rgba(0,0,0,0)'
+              <Input
                 placeholder='Confirm password'
-                style={styles.input}
                 secureTextEntry={true}
                 autoCapitalize='none'
                 onChangeText={(confirmPass) =>

@@ -117,8 +117,8 @@ const Homepage = (props) => {
       setRefreshing(false);
       setLoading(false);
       setPosts(response.data.data);
-      socket.emit("joining", { tag: data?.tag });
-      socket.on("created post", (data) => {
+      socket?.emit("joining", { tag: data?.tag });
+      socket?.on("created post", (data) => {
         // if (data.posts.length <= 0) return;
         setPosts(data.posts);
         // if (isUser?.data.data.uuid === data.creator) {
@@ -142,7 +142,7 @@ const Homepage = (props) => {
         // });
       });
 
-      socket.on("edited post", (data) => {
+      socket?.on("edited post", (data) => {
         console.log(data);
         setPosts(data.posts);
         // if (isUser?.data.data.uuid === data.creator) {
@@ -156,7 +156,7 @@ const Homepage = (props) => {
         });
       });
 
-      socket.on("deleted post", (data) => {
+      socket?.on("deleted post", (data) => {
         console.log(data);
         setPosts(data.posts);
         // if (isUser?.data.data.uuid === data.creator) {

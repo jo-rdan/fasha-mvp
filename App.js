@@ -47,6 +47,9 @@ import { createMaterialBottomTabNavigator } from "@react-navigation/material-bot
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { Host } from "react-native-portalize";
 import HomeTabs from "./src/screens/shared/AppStacks.js";
+import ForgotPassword from "./src/screens/ForgotPassword.js";
+import VerifyCode from "./src/screens/VerifyCode.js";
+import ResetPassowrd from "./src/screens/ResetPassword.js";
 // import { HomeTabs } from "./src/screens/shared/AppStacks";
 
 const Stack = createStackNavigator();
@@ -318,88 +321,12 @@ export default () => {
       }
     }
   };
+
   return (
     <>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider mapping={mapping} theme={theme}>
         <NavigationContainer>
-          {/* {isAuth ? (
-            <Host>
-              <Tab.Navigator
-                labeled={false}
-                activeColor='#717af0'
-                barStyle={{ backgroundColor: "#ffff", elevation: 0 }}
-              >
-                <Tab.Screen
-                  name='Home'
-                  component={HomeStacks}
-                  options={{
-                    tabBarLabel: "Home",
-                    headerShown: false,
-                    tabBarIcon: ({ color, name }) => (
-                      <Icon name='home' fill={color} height={32} width={20} />
-                    ),
-                    style: { borderTopWidth: 3, borderTopColor: "indigo" },
-                  }}
-                />
-                <Tab.Screen
-                  name='Profile'
-                  options={{
-                    headerShown: false,
-                    tabBarIcon: ({ color }) => (
-                      <Icon name='person' fill={color} height={32} width={20} />
-                    ),
-                  }}
-                >
-                  {(props) => (
-                    <ProfileStacks
-                      {...props}
-                      onLogout={handleLogout}
-                      onDelete={handleDeleteUser}
-                      loading={loading}
-                      setLoading={setLoading}
-                    />
-                  )}
-                </Tab.Screen>
-              </Tab.Navigator>
-            </Host>
-          ) : (
-            <Stack.Navigator>
-              <Stack.Screen name='App' options={{ headerShown: false }}>
-                {(props) => <App {...props} loading={isLoading} />}
-              </Stack.Screen>
-              <Stack.Screen name='Signin' options={{ headerShown: false }}>
-                {(props) => (
-                  <Signin
-                    {...props}
-                    onSignin={handleSignin}
-                    loading={loading}
-                  />
-                )}
-              </Stack.Screen>
-              <Stack.Screen name='Signup' options={{ headerShown: false }}>
-                {(props) => (
-                  <Signup
-                    {...props}
-                    onSignup={handleSignup}
-                    loading={loading}
-                  />
-                )}
-              </Stack.Screen>
-              <Stack.Screen
-                name='SetupProfile'
-                options={{ headerShown: false }}
-              >
-                {(props) => (
-                  <SetupProfile
-                    {...props}
-                    onSetup={handleSetupProfile}
-                    loading={loading}
-                  />
-                )}
-              </Stack.Screen>
-            </Stack.Navigator>
-          )} */}
           <Stack.Navigator>
             {isAuth ? (
               <>
@@ -481,6 +408,21 @@ export default () => {
                     />
                   )}
                 </Stack.Screen>
+                <Stack.Screen
+                  name='Forgot Password'
+                  component={ForgotPassword}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name='Verify'
+                  component={VerifyCode}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name='Reset Password'
+                  component={ResetPassowrd}
+                  options={{ headerShown: false }}
+                />
               </>
             )}
           </Stack.Navigator>
