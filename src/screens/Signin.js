@@ -3,7 +3,6 @@ import {
   View,
   Image,
   StyleSheet,
-  TextInput,
   ScrollView,
   KeyboardAvoidingView,
   Alert,
@@ -11,7 +10,7 @@ import {
   StatusBar,
 } from "react-native";
 import axios from "axios";
-import { Button, Text, Spinner } from "@ui-kitten/components";
+import { Button, Text, Spinner, Input } from "@ui-kitten/components";
 import { validateEmail } from "../helpers/emailValidation";
 import { API_URL } from "dotenv";
 import { useNavigation } from "@react-navigation/native";
@@ -94,21 +93,17 @@ function Signin({ onSignin, loading }) {
           </View>
           <View style={styles.form}>
             <View style={styles.innerForm}>
-              <TextInput
-                underlineColorAndroid='rgba(0,0,0,0)'
+              <Input
                 placeholder='Email or Phone'
-                style={styles.input}
-                autoCompleteType='email'
+                keyboardType='email-address'
                 autoCapitalize='none'
                 value={userData.userEmail}
                 onChangeText={(userEmail) =>
                   setUserData({ ...userData, userEmail })
                 }
               />
-              <TextInput
-                underlineColorAndroid='rgba(0,0,0,0)'
+              <Input
                 placeholder='Password'
-                style={styles.input}
                 secureTextEntry={true}
                 autoCapitalize='none'
                 value={userData.userPassword}
@@ -116,6 +111,13 @@ function Signin({ onSignin, loading }) {
                   setUserData({ ...userData, userPassword })
                 }
               />
+              <Text
+                status='primary'
+                style={styles.forgot}
+                onPress={() => navigation.navigate("Forgot Password")}
+              >
+                Forgot Password?
+              </Text>
             </View>
           </View>
           <View style={styles.btnParent}>
@@ -154,6 +156,11 @@ const styles = StyleSheet.create({
   form: {
     width: "92%",
     alignSelf: "center",
+  },
+  forgot: {
+    fontSize: 13,
+    fontWeight: "bold",
+    alignSelf: "flex-start",
   },
   footer: {
     fontSize: 12,
