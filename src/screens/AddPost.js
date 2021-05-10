@@ -160,7 +160,7 @@ const AddPost = ({ visible, setVisible, image }) => {
       });
       setIsCreating(false);
       navigation.jumpTo("Feed");
-      onHide();
+      return setVisible(false);
     } catch (error) {
       setIsCreating(false);
       console.log(error);
