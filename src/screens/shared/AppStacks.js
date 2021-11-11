@@ -30,7 +30,7 @@ const HomeTabs = ({ onLogout, onDelete, loading, setLoading }) => {
     <Host>
       <Tab.Navigator
         activeColor='#3366ff'
-        barStyle={{ backgroundColor: "#ffff", elevation: 0 }}
+        barStyle={{ backgroundColor: "#ffff", elevation: 2 }}
       >
         <Tab.Screen
           name='Feed'
@@ -49,7 +49,7 @@ const HomeTabs = ({ onLogout, onDelete, loading, setLoading }) => {
             style: { borderTopWidth: 3, borderTopColor: "indigo" },
           }}
         />
-        <Tab.Screen
+        {/* <Tab.Screen
           name='Search'
           component={Search}
           options={{
@@ -59,7 +59,7 @@ const HomeTabs = ({ onLogout, onDelete, loading, setLoading }) => {
               <Icon name='search' fill={color} height={32} width={20} />
             ),
           }}
-        />
+        /> */}
         <Tab.Screen
           name='Notifications'
           component={Notifications}
@@ -74,6 +74,7 @@ const HomeTabs = ({ onLogout, onDelete, loading, setLoading }) => {
                 width={20}
               />
             ),
+            tabBarBadge: true,
           }}
         />
         <Tab.Screen

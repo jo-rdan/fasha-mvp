@@ -108,6 +108,7 @@ const Homepage = (props) => {
       });
       const { data } = isUser.data;
       setUser(data);
+      socketCon.emit("joining", { tag: data?.tag });
       const response = await axios.get(
         `${API_URL}/posts/?tagName=${data?.tag?.tagName}`,
         {
@@ -117,19 +118,41 @@ const Homepage = (props) => {
       setRefreshing(false);
       setLoading(false);
       setPosts(response.data.data);
-      socket?.emit("joining", { tag: data?.tag });
-      socket?.on("created post", (data) => {
+      socketCon.on("created post", (data) => {
+        try {
+          setPosts(data.posts);
+          if (isUser?.data.data.uuid === data.creator.uuid) {
+            return Toast.show({
+              type: "success",
+              text1: "Success",
+              text2: "Post created",
+              autoHide: true,
+              visibilityTime: 2000,
+              position: "top",
+            });
+          }
+          return Toast.show({
+            type: "success",
+            text1: "New Post",
+            text2: "New post added",
+            autoHide: true,
+            visibilityTime: 2000,
+            position: "top",
+          });
+        } catch (error) {
+          socketCon.on("error_thrown", (error) => {
+            console.log(error);
+            // return Toast.show({
+            //   type: "error",
+            //   text1: "Error",
+            //   text2: error.message,
+            //   autoHide: true,
+            //   visibilityTime: 2000,
+            //   position: "top",
+            // });
+          });
+        }
         // if (data.posts.length <= 0) return;
-        setPosts(data.posts);
-        // if (isUser?.data.data.uuid === data.creator) {
-        return Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: "Post created",
-          autoHide: true,
-          visibilityTime: 2000,
-          position: "top",
-        });
         // }
         // console.log("cops");
         // return Toast.show({
@@ -142,8 +165,7 @@ const Homepage = (props) => {
         // });
       });
 
-      socket?.on("edited post", (data) => {
-        console.log(data);
+      socketCon.on("edited post", (data) => {
         setPosts(data.posts);
         // if (isUser?.data.data.uuid === data.creator) {
         return Toast.show({
@@ -156,8 +178,7 @@ const Homepage = (props) => {
         });
       });
 
-      socket?.on("deleted post", (data) => {
-        console.log(data);
+      socketCon.on("deleted post", (data) => {
         setPosts(data.posts);
         // if (isUser?.data.data.uuid === data.creator) {
         return Toast.show({
