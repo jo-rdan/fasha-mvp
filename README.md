@@ -35,7 +35,7 @@ To run this prototype, you will need the following tools:
 
 ### Instructions
 - On your android device, head to the `google playstore` and download the `Expo Go` app
-- Once you installed the `Expo Go` app, open your web browser(on your computer) and paste this ```https://expo.dev/@jo_rdan23/fasha-mvp```
+- Once you installed the `Expo Go` app, open your web browser(on your computer) and paste this ```https://expo.dev/@jo_rdan23/fasha-mvp``` or just click [here](https://expo.dev/@jo_rdan23/fasha-mvp)
 - Open the `Expo Go` app and scan the QR code.
 
 **And that's it!!** You can now use the prototype.
