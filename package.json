@@ -24,7 +24,7 @@
     "apollo-cache-inmemory": "^1.6.6",
     "apollo-client": "^2.6.10",
     "apollo-link-http": "^1.5.17",
-    "axios": "^0.21.1",
+    "axios": "^1.13.5",
     "bcrypt": "^5.0.1",
     "expo": "~40.0.0",
     "expo-font": "~8.4.0",
